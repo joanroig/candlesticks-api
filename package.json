@@ -12,12 +12,12 @@
     "start:partner-service": "java -jar partner-service-1.0.1-all.jar --port=8032",
     "lint": "eslint . --ext .ts",
     "format": "eslint . --ext .ts --fix",
-    "format:staged": "lint-staged"
+    "format:staged": "lint-staged",
+    "prepare": "husky install"
   },
   "dependencies": {
     "config": "^3.3.7",
     "express": "^4.18.1",
-    "lint-staged": "^12.4.1",
     "moment": "^2.29.3",
     "nodemon": "^2.0.16",
     "ts-node": "^10.7.0",
@@ -36,6 +36,7 @@
     "@typescript-eslint/parser": "5.22.0",
     "eslint": "8.15.0",
     "husky": "7.0.4",
+    "lint-staged": "12.4.1",
     "rimraf": "3.0.2"
   },
   "engines": {
