@@ -1,0 +1,21 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+branch=$(git branch --show-current)
+
+# # Prevent committing into master
+# if [ "$branch" = "master" ]; then
+#   echo "You can't commit directly to master branch"
+#   exit 1
+# fi
+
+# Enforce branch naming policy
+valid_branch_regex='^((fix|feat|chore|tests)\/[a-zA-Z0-9\-]+)$|^(develop)$|^(master)$'
+message="There is something wrong with your branch name $branch. Branch names in this project must adhere to this contract: $valid_branch_regex. Your commit will be rejected. You should rename your branch to a valid name and try again."
+if [[ ! $branch =~ $valid_branch_regex ]]; then
+  echo "$message"
+  exit 1
+fi
+
+# Format staged files with eslint and prettier as a plugin
+yarn run format:staged
