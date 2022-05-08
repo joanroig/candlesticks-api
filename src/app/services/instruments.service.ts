@@ -1,7 +1,7 @@
 import { transformAndValidateSync } from "class-transformer-validator";
 import { Service } from "typedi";
+import CandlesticksDao from "../dao/candlesticks.dao";
 import InstrumentsDao from "../dao/instruments.dao";
-import QuotesDao from "../dao/quotes.dao";
 import {
   InstrumentEvent,
   InstrumentEventType,
@@ -12,7 +12,7 @@ import StreamService from "./stream.service";
 export class InstrumentsService extends StreamService {
   constructor(
     private readonly instrumentsDao: InstrumentsDao,
-    private readonly quotesDao: QuotesDao
+    private readonly candlesticksDao: CandlesticksDao
   ) {
     super("instruments");
   }
@@ -35,8 +35,8 @@ export class InstrumentsService extends StreamService {
       case InstrumentEventType.DELETE:
         if (this.instrumentsDao.has(instrument.isin)) {
           this.instrumentsDao.delete(instrument.isin);
-          // delete the quotes with the same isin
-          this.quotesDao.delete(instrument.isin);
+          // delete the candlesticks with the same isin
+          this.candlesticksDao.delete(instrument.isin);
         } else {
           console.error(`Instrument ${instrument.isin} does not exist`);
         }

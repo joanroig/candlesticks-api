@@ -1,67 +1,53 @@
 import config from "config";
-import moment from "moment";
 import { Service } from "typedi";
 import { CandlesticksInterface } from "../common/interfaces/candlesticks.interface";
+import Utils from "../common/utils/utils";
+import CandlesticksDao from "../dao/candlesticks.dao";
 import InstrumentsDao from "../dao/instruments.dao";
-import QuotesDao from "../dao/quotes.dao";
 import { ISIN } from "../models/aliases.model";
 import { Candlestick } from "../models/candlestick.model";
 import { Instrument, InstrumentEventType } from "../models/instrument.model";
 import { Quote } from "../models/quote.model";
-import Utils from "../utils/utils";
 
 @Service()
 export default class CandlesticksService implements CandlesticksInterface {
   constructor(
     private readonly instrumentsDao: InstrumentsDao,
-    private readonly quotesDao: QuotesDao
+    private readonly candlesticksDao: CandlesticksDao
   ) {}
 
   limit = Number(config.get("candlestick-limit"));
 
+  /**
+   * Get the candlesticks of an instrument
+   * @param isin Calculate candlesticks of a given isin
+   * @returns candlestick list
+   */
   getCandlesticks(isin: ISIN): Candlestick[] {
-    if (!this.quotesDao.has(isin)) {
-      throw `No quotes found for the ISIN ${isin}`;
+    if (!this.candlesticksDao.has(isin)) {
+      throw `No candlesticks found for the ISIN ${isin}`;
     }
-    const quotes = this.quotesDao.get(isin);
+
+    const candles = this.candlesticksDao.get(isin);
+
+    const now = Utils.getStartOfMinute(Utils.getCurrentTime());
+    const startRange = now - this.limit * 60000;
+
     const result: Candlestick[] = [];
+    let previous: Candlestick;
 
-    // Get the start of the current minute TODO: this can give negative values
-    const startTimestamp = moment(Utils.getCurrentTime())
-      .endOf("minute")
-      .valueOf();
-
-    const groups: Quote[][] = [];
-
-    quotes.forEach((quote) => {
-      const diff = startTimestamp - quote.timestamp;
-      if (diff < this.limit * 60000) {
-        const minute = Math.floor(diff / 60000);
-        if (!groups[minute]) {
-          groups[minute] = [];
-        }
-        groups[minute].push(quote);
+    for (let i = 0; i <= this.limit; i++) {
+      const id = startRange + i * 60000;
+      const candle = candles.get(id);
+      if (candle) {
+        result.push(candle);
+        previous = candle;
+      } else if (previous) {
+        // Reuse previous candle for filling gaps
+        result.push(previous);
       }
-    });
+    }
 
-    //  TODO: set order for candlesticks, iterate the 30 items and copy values of previous if the last does not exists
-    groups.forEach((q) => {
-      const highPrice = q.reduce((a, b) => (a.price > b.price ? a : b)).price;
-      const lowPrice = q.reduce((a, b) => (a.price < b.price ? a : b)).price;
-      const open = q.reduce((a, b) => (a.timestamp < b.timestamp ? a : b));
-      const close = q.reduce((a, b) => (a.timestamp > b.timestamp ? a : b));
-
-      const candlestick = new Candlestick(
-        Utils.formatTime(open.timestamp),
-        open.price,
-        highPrice,
-        lowPrice,
-        Utils.formatTime(close.timestamp),
-        close.price
-      );
-
-      result.push(candlestick);
-    });
     return result;
   }
 
@@ -69,8 +55,69 @@ export default class CandlesticksService implements CandlesticksInterface {
     return;
   }
 
+  /**
+   * Add quote data to the respective candlestick
+   * @param quote
+   */
   handleQuote(quote: Quote) {
-    return;
+    if (!this.instrumentsDao.has(quote.isin)) {
+      throw `No instrument found for the ISIN ${quote.isin}`;
+    }
+
+    if (!this.candlesticksDao.has(quote.isin)) {
+      this.candlesticksDao.initialize(quote.isin);
+    }
+    const candlesticks = this.candlesticksDao.get(quote.isin);
+
+    // Timestamp of the minute of the candlestick
+    const minute = Utils.getStartOfMinute(quote.timestamp);
+
+    let candlestick: Candlestick;
+    if (candlesticks.has(minute)) {
+      const previous = candlesticks.get(minute);
+      candlestick = this.updateCandlestick(previous, quote);
+    } else {
+      // Add new Candlestick
+      candlestick = new Candlestick(
+        quote.timestamp,
+        quote.price,
+        quote.price,
+        quote.price,
+        quote.timestamp,
+        quote.price
+      );
+    }
+
+    // Save candlestick
+    candlesticks.set(minute, candlestick);
+
+    // not needed, the object is updated by reference
+    // this.candlesticksDao.set(quote.isin, candlesticks);
+  }
+
+  /**
+   * Edit a candlestick taking into account that the quote can be out of order
+   * @param candlestick
+   * @param quote
+   */
+  updateCandlestick(candlestick: Candlestick, quote: Quote) {
+    // Update open and close data
+    if (quote.timestamp < candlestick.openTimestamp) {
+      candlestick.openTimestamp = quote.timestamp;
+      candlestick.openPrice = quote.price;
+    }
+    if (quote.timestamp > candlestick.closeTimestamp) {
+      candlestick.closeTimestamp = quote.timestamp;
+      candlestick.closePrice = quote.price;
+    }
+    // Update prices
+    if (quote.price > candlestick.highPrice) {
+      candlestick.highPrice = quote.price;
+    }
+    if (quote.price < candlestick.lowPrice) {
+      candlestick.lowPrice = quote.price;
+    }
+    return candlestick;
   }
 
   getIsinList(): ISIN[] {
