@@ -1,10 +1,25 @@
+import { Expose, Transform } from "class-transformer";
+import { IsEnum } from "class-validator";
 import { ISIN } from "./aliases.model";
 
-export type Instrument = { isin: ISIN; description: string };
-
-export type InstrumentEvent = { type: InstrumentEventType; data: Instrument };
-
 export enum InstrumentEventType {
-  ADD,
-  DELETE,
+  ADD = "ADD",
+  DELETE = "DELETE",
+}
+export class Instrument {
+  @Expose()
+  @Transform(({ obj }) => obj.data.isin)
+  isin: ISIN;
+
+  @Expose()
+  @Transform(({ obj }) => obj.data.description)
+  description: string;
+}
+
+export class InstrumentEvent {
+  @Expose()
+  data: Instrument;
+  @Expose()
+  @IsEnum(InstrumentEventType)
+  type: InstrumentEventType;
 }

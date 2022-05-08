@@ -1,11 +1,10 @@
 import config from "config";
-import { Service } from "typedi";
 import WebSocket from "ws";
 
 /**
  * Base class to be extended for each resource that needs to be tracked
  */
-class StreamService {
+export default class StreamService {
   resourceName: string;
   ws: WebSocket;
   streamUrl = config.get("stream-url");
@@ -34,22 +33,10 @@ class StreamService {
       console.log("disconnected");
     });
 
-    this.ws.on("message", (data) => {
-      console.log(`Data: ${data}`);
-    });
+    this.ws.on("message", (data) => this.onMessage(String(data)));
   }
-}
 
-@Service()
-export class InstrumentsStreamService extends StreamService {
-  constructor() {
-    super("instruments");
-  }
-}
-
-@Service()
-export class QuotesStreamService extends StreamService {
-  constructor() {
-    super("quotes");
+  onMessage(data: string) {
+    console.log(`${data}`);
   }
 }

@@ -1,4 +1,5 @@
 {
   "api-port": "9000",
-  "stream-url": "localhost:8032"
+  "stream-url": "localhost:8032",
+  "candlestick-limit": 30
 }

@@ -3,27 +3,29 @@ import express from "express";
 import "reflect-metadata";
 import { Service } from "typedi";
 import CandlesticksService from "./services/candlesticks.service";
-import {
-  InstrumentsStreamService,
-  QuotesStreamService,
-} from "./services/stream.service";
+import { InstrumentsService } from "./services/instruments.service";
+import { QuotesService } from "./services/quotes.service";
 
 @Service()
 export default class Server {
   constructor(
-    private readonly instrumentsStreamService: InstrumentsStreamService,
-    private readonly quotesStreamService: QuotesStreamService,
-    private readonly candlesticksService: CandlesticksService
+    private readonly instrumentsStreamService: InstrumentsService,
+    private readonly quotesStreamService: QuotesService,
+    candlesticksService: CandlesticksService
   ) {
     // Start express server
     const app = express();
 
     // API exposed endpoints
     app.get("/candlesticks", (req, res) => {
-      res.send("isin: " + req.query.isin);
+      res.send(candlesticksService.getCandlesticks(req.query.isin as string));
     });
 
-    // Listen to the specified port, use 9000 if is not defined
+    app.get("/isins", (req, res) => {
+      res.send(candlesticksService.getIsinList());
+    });
+
+    // Listen to the specified port, use 9000 if not defined
     const PORT = config.get("api-port") || 9000;
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}...`);

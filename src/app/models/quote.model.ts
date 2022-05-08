@@ -1,5 +1,11 @@
-import { ISIN, Price } from "./aliases.model";
+import { Instant, ISIN, Price } from "./aliases.model";
 
-export type Quote = { isin: ISIN; price: Price };
+export class Quote {
+  isin: ISIN;
+  price: Price;
+  timestamp: Instant;
+}
 
-export type QuoteEvent = { data: Quote };
+export class QuoteEvent {
+  data: Quote;
+}
