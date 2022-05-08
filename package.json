@@ -16,6 +16,9 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "class-transformer": "^0.5.1",
+    "class-transformer-validator": "^0.9.1",
+    "class-validator": "^0.13.2",
     "config": "^3.3.7",
     "express": "^4.18.1",
     "moment": "^2.29.3",
@@ -33,6 +36,7 @@
     "@types/config": "0.0.41",
     "@types/express": "4.17.13",
     "@types/node": "17.0.31",
+    "@types/validator": "^13.7.2",
     "@types/ws": "8.5.3",
     "@typescript-eslint/eslint-plugin": "5.22.0",
     "@typescript-eslint/parser": "5.22.0",

@@ -3,6 +3,8 @@
 System that enables users to view price histories.
 It will receive updates from a partner service, transform these updates and provide the aggregated data through an endpoint.
 
+> The implementation is based on [assumptions](ASSUMPTIONS.md) to develop a MVP within 5 days.
+
 ## Content
 
 - Intro and terminology
