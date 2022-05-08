@@ -2,6 +2,7 @@ import config from "config";
 import express from "express";
 import "reflect-metadata";
 import { Service } from "typedi";
+import Utils from "./common/utils/utils";
 import CandlesticksService from "./services/candlesticks.service";
 import { InstrumentsService } from "./services/instruments.service";
 import { QuotesService } from "./services/quotes.service";
@@ -18,7 +19,20 @@ export default class Server {
 
     // API exposed endpoints
     app.get("/candlesticks", (req, res) => {
-      res.send(candlesticksService.getCandlesticks(req.query.isin as string));
+      let candlesticks = candlesticksService.getCandlesticks(
+        req.query.isin as string
+      );
+
+      if (req.query.sort === "asc") {
+        candlesticks = candlesticks.reverse();
+      }
+
+      if (req.query.format === "true") {
+        const formatted = Utils.formatCandlesticks(candlesticks);
+        res.send(formatted);
+      } else {
+        res.send(candlesticks);
+      }
     });
 
     app.get("/isins", (req, res) => {
