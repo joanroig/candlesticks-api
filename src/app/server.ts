@@ -1,54 +1,76 @@
-import config from "config";
 import express from "express";
 import "reflect-metadata";
-import { Service } from "typedi";
-import Utils from "./common/utils/utils";
-import CandlesticksService from "./services/candlesticks.service";
-import { InstrumentsService } from "./services/instruments.service";
-import { QuotesService } from "./services/quotes.service";
+import { Inject, Service } from "typedi";
+import configuration from "./common/constants/configuration";
+import endpoints from "./common/constants/endpoints";
+import InvalidParametersError from "./common/errors/invalid-parameters-error";
+import { Logger } from "./common/logger/logger";
+import errorHandler from "./middlewares/error.middleware";
+import InstrumentsService from "./services/instruments.service";
+import QuotesService from "./services/quotes.service";
+import RestService from "./services/rest.service";
+
+const logger = Logger.getLogger("Server");
 
 @Service()
 export default class Server {
-  constructor(
-    private readonly instrumentsStreamService: InstrumentsService,
-    private readonly quotesStreamService: QuotesService,
-    candlesticksService: CandlesticksService
-  ) {
-    // Start express server
-    const app = express();
+  // Listen to the specified port, use 9000 if not defined
+  private readonly HOST = configuration.API_HOST;
+  private readonly PORT = configuration.API_PORT;
 
-    // API exposed endpoints
-    app.get("/candlesticks", (req, res) => {
-      let candlesticks = candlesticksService.getCandlesticks(
-        req.query.isin as string
-      );
+  @Inject()
+  private readonly quotesStreamService: QuotesService;
+  @Inject()
+  private readonly instrumentsService: InstrumentsService;
+  @Inject()
+  private readonly restService: RestService;
 
-      if (req.query.sort === "asc") {
-        candlesticks = candlesticks.reverse();
-      }
-
-      if (req.query.format === "true") {
-        const formatted = Utils.formatCandlesticks(candlesticks);
-        res.send(formatted);
-      } else {
-        res.send(candlesticks);
-      }
-    });
-
-    app.get("/isins", (req, res) => {
-      res.send(candlesticksService.getIsinList());
-    });
-
-    // Listen to the specified port, use 9000 if not defined
-    const PORT = config.get("api-port") || 9000;
-    app.listen(PORT, () => {
-      console.log(`Server listening on port ${PORT}...`);
-    });
-  }
+  private app: express.Application;
 
   start() {
+    // Start express server
+    this.app = express();
+    this.connectWebservices();
+    this.initializeApi();
+    this.initializeErrorHandler();
+  }
+
+  private connectWebservices() {
     // Connect streams
-    this.instrumentsStreamService.connect();
+    this.instrumentsService.connect();
     this.quotesStreamService.connect();
+  }
+
+  private initializeErrorHandler() {
+    this.app.use(errorHandler);
+  }
+
+  private initializeApi() {
+    // API exposed endpoints
+    this.app.get("/" + endpoints.CANDLES, (req, res) => {
+      const isin = req.query.isin as string;
+      const sort = req.query.sort as string;
+      const format = req.query.format as string;
+
+      if (!isin) {
+        throw new InvalidParametersError("isin");
+      }
+
+      const result = this.restService.getCandlesticks(isin, sort, format);
+      return res.status(200).send(result);
+    });
+
+    this.app.get("/" + endpoints.ISIN_LIST, (req, res) => {
+      const result = this.restService.getIsinList();
+      res.send(result);
+    });
+
+    this.app.listen(this.PORT, () => {
+      // Print API information
+      logger.info(`Server listening on ${this.HOST}:${this.PORT}`);
+      logger.info("Exposed endpoints:");
+      logger.info(` - ${this.HOST}:${this.PORT}/${endpoints.CANDLES}`);
+      logger.info(` - ${this.HOST}:${this.PORT}/${endpoints.ISIN_LIST}`);
+    });
   }
 }

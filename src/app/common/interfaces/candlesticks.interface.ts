@@ -1,7 +1,5 @@
 import { ISIN } from "../../models/aliases.model";
 import { Candlestick } from "../../models/candlestick.model";
-import { Instrument, InstrumentEventType } from "../../models/instrument.model";
-import { Quote } from "../../models/quote.model";
 
 export interface CandlesticksInterface {
   /**
@@ -11,21 +9,21 @@ export interface CandlesticksInterface {
    */
   getCandlesticks: (isin: ISIN) => Candlestick[];
 
-  /**
-   * Handle instrument event
-   * @param instrument instrument object identified by its ISIN
-   * @param eventType action to do with the instrument, like adding or removing it
-   * @returns
-   */
-  handleInstrument: (
-    instrument: Instrument,
-    eventType: InstrumentEventType
-  ) => void;
+  // /**
+  //  * Handle instrument event
+  //  * @param instrument instrument object identified by its ISIN
+  //  * @param eventType action to do with the instrument, like adding or removing it
+  //  * @returns
+  //  */
+  // handleInstrument: (
+  //   instrument: Instrument,
+  //   eventType: InstrumentEventType
+  // ) => void;
 
-  /**
-   * Handle quote event
-   * @param quote quote object that targets an instrument identified by the ISIN
-   * @returns
-   */
-  handleQuote: (quote: Quote) => void;
+  // /**
+  //  * Handle quote event
+  //  * @param quote quote object that targets an instrument identified by the ISIN
+  //  * @returns
+  //  */
+  // handleQuote: (quote: Quote) => void;
 }

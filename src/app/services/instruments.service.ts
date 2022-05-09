@@ -1,32 +1,43 @@
 import { transformAndValidateSync } from "class-transformer-validator";
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
+import { Logger } from "../common/logger/logger";
 import CandlesticksDao from "../dao/candlesticks.dao";
 import InstrumentsDao from "../dao/instruments.dao";
+import { ISIN } from "../models/aliases.model";
 import {
   InstrumentEvent,
   InstrumentEventType,
 } from "../models/instrument.model";
 import StreamService from "./stream.service";
 
+const logger = Logger.getLogger("InstrumentsService");
+
 @Service()
-export class InstrumentsService extends StreamService {
-  constructor(
-    private readonly instrumentsDao: InstrumentsDao,
-    private readonly candlesticksDao: CandlesticksDao
-  ) {
-    super("instruments");
+export default class InstrumentsService extends StreamService {
+  @Inject()
+  private readonly instrumentsDao: InstrumentsDao;
+
+  @Inject()
+  private readonly candlesticksDao: CandlesticksDao;
+
+  constructor() {
+    super("instruments", InstrumentsService.name);
   }
 
   onMessage(data: string) {
     const instrumentEvent = transformAndValidateSync(InstrumentEvent, data, {
       transformer: { excludeExtraneousValues: true },
     }) as InstrumentEvent;
+    this.handleInstrument(instrumentEvent);
+  }
+
+  handleInstrument(instrumentEvent: InstrumentEvent) {
     const instrument = instrumentEvent.data;
 
     switch (instrumentEvent.type) {
       case InstrumentEventType.ADD:
         if (this.instrumentsDao.has(instrument.isin)) {
-          console.error(`Instrument ${instrument.isin} already exists`);
+          logger.error(`Instrument ${instrument.isin} already exists`);
         } else {
           this.instrumentsDao.set(instrument.isin, instrument);
         }
@@ -38,13 +49,17 @@ export class InstrumentsService extends StreamService {
           // delete the candlesticks with the same isin
           this.candlesticksDao.delete(instrument.isin);
         } else {
-          console.error(`Instrument ${instrument.isin} does not exist`);
+          logger.error(`Instrument ${instrument.isin} does not exist`);
         }
         break;
 
       default:
-        console.error("InstrumentEventType not recognized");
+        logger.error("InstrumentEventType not recognized");
         break;
     }
+  }
+
+  getIsinList(): ISIN[] {
+    return this.instrumentsDao.getKeys();
   }
 }

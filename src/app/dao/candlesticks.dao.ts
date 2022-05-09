@@ -6,7 +6,7 @@ import { Candlestick, CandlestickHistory } from "../models/candlestick.model";
 @Service()
 export default class CandlesticksDao implements DaoInterface {
   // Candlesticks data structure, where an ISIN identifies a CandlestickHistory
-  private candlesticks = new Map<ISIN, CandlestickHistory>();
+  private readonly candlesticks = new Map<ISIN, CandlestickHistory>();
 
   has(key: string) {
     return this.candlesticks.has(key);
