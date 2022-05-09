@@ -5,7 +5,7 @@ import { Instrument } from "../models/instrument.model";
 
 @Service()
 export default class InstrumentsDao implements DaoInterface {
-  private instruments = new Map<ISIN, Instrument>();
+  private readonly instruments = new Map<ISIN, Instrument>();
 
   has(key: string) {
     return this.instruments.has(key);

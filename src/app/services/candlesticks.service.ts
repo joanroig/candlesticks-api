@@ -1,22 +1,20 @@
 import config from "config";
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
+import configuration from "../common/constants/configuration";
+import InstrumentNotFoundError from "../common/errors/instrument-not-found-error";
 import { CandlesticksInterface } from "../common/interfaces/candlesticks.interface";
 import Utils from "../common/utils/utils";
 import CandlesticksDao from "../dao/candlesticks.dao";
-import InstrumentsDao from "../dao/instruments.dao";
 import { ISIN } from "../models/aliases.model";
 import { Candlestick } from "../models/candlestick.model";
-import { Instrument, InstrumentEventType } from "../models/instrument.model";
 import { Quote } from "../models/quote.model";
 
 @Service()
 export default class CandlesticksService implements CandlesticksInterface {
-  constructor(
-    private readonly instrumentsDao: InstrumentsDao,
-    private readonly candlesticksDao: CandlesticksDao
-  ) {}
+  @Inject()
+  private readonly candlesticksDao: CandlesticksDao;
 
-  limit = Number(config.get("candlestick-limit"));
+  private readonly limit = configuration.CANDLESTICK_LIMIT;
 
   /**
    * Get the candlesticks of an instrument
@@ -25,7 +23,7 @@ export default class CandlesticksService implements CandlesticksInterface {
    */
   getCandlesticks(isin: ISIN): Candlestick[] {
     if (!this.candlesticksDao.has(isin)) {
-      throw `No candlesticks found for the ISIN ${isin}`;
+      throw new InstrumentNotFoundError(isin);
     }
 
     const candles = this.candlesticksDao.get(isin);
@@ -36,40 +34,35 @@ export default class CandlesticksService implements CandlesticksInterface {
     const result: Candlestick[] = [];
     let previous: Candlestick;
 
-    for (let i = 0; i <= this.limit; i++) {
+    for (let i = 1; i <= this.limit; i++) {
       const id = startRange + i * 60000;
       const candle = candles.get(id);
       if (candle) {
         result.push(candle);
         previous = candle;
       } else if (previous) {
-        // Reuse previous candle for filling gaps
-        result.push(previous);
+        // Reuse previous candle for filling gaps, change the timings to the start of the corresponding minute
+        const clone = { ...previous };
+        clone.openTimestamp = startRange + i * 60000;
+        clone.closeTimestamp = clone.openTimestamp;
+        result.push(clone);
       }
     }
 
     return result;
   }
 
-  handleInstrument(instrument: Instrument, eventType: InstrumentEventType) {
-    return;
-  }
-
   /**
    * Add quote data to the respective candlestick
    * @param quote
    */
-  handleQuote(quote: Quote) {
-    if (!this.instrumentsDao.has(quote.isin)) {
-      throw `No instrument found for the ISIN ${quote.isin}`;
-    }
-
+  parseQuote(quote: Quote) {
     if (!this.candlesticksDao.has(quote.isin)) {
       this.candlesticksDao.initialize(quote.isin);
     }
     const candlesticks = this.candlesticksDao.get(quote.isin);
 
-    // Timestamp of the minute of the candlestick
+    // Minute of the candlestick
     const minute = Utils.getStartOfMinute(quote.timestamp);
 
     let candlestick: Candlestick;
@@ -78,21 +71,24 @@ export default class CandlesticksService implements CandlesticksInterface {
       candlestick = this.updateCandlestick(previous, quote);
     } else {
       // Add new Candlestick
-      candlestick = new Candlestick(
-        quote.timestamp,
-        quote.price,
-        quote.price,
-        quote.price,
-        quote.timestamp,
-        quote.price
-      );
+      candlestick = this.createCandlestick(quote);
     }
 
-    // Save candlestick
+    // Save candlestick, which is saved into the candlesticks dao by reference
     candlesticks.set(minute, candlestick);
 
-    // not needed, the object is updated by reference
-    // this.candlesticksDao.set(quote.isin, candlesticks);
+    // If using a database, save it here
+  }
+
+  private createCandlestick(quote: Quote) {
+    return new Candlestick(
+      quote.timestamp,
+      quote.price,
+      quote.price,
+      quote.price,
+      quote.timestamp,
+      quote.price
+    );
   }
 
   /**
@@ -100,7 +96,7 @@ export default class CandlesticksService implements CandlesticksInterface {
    * @param candlestick
    * @param quote
    */
-  updateCandlestick(candlestick: Candlestick, quote: Quote) {
+  private updateCandlestick(candlestick: Candlestick, quote: Quote) {
     // Update open and close data
     if (quote.timestamp < candlestick.openTimestamp) {
       candlestick.openTimestamp = quote.timestamp;
@@ -118,9 +114,5 @@ export default class CandlesticksService implements CandlesticksInterface {
       candlestick.lowPrice = quote.price;
     }
     return candlestick;
-  }
-
-  getIsinList(): ISIN[] {
-    return this.instrumentsDao.getKeys();
   }
 }
