@@ -1,7 +1,18 @@
-java:
-  image: openjdk:11
-  volumes:
-  - ./:/app 
-  command: bash -c "cd /app && java -jar partner-service-1.0.1-all.jar --port=8032"
-  ports:
-    - 8032:8032
+version: "3.8"
+services:
+  node:
+    container_name: candlesticks
+    image: node
+    restart: always
+    build: .
+    ports:
+      - "9000:9000"
+
+  java:
+    container_name: partner
+    image: openjdk:11
+    volumes:
+      - ./:/app
+    command: bash -c "cd /app && java -jar partner-service-1.0.1-all.jar --port=8032"
+    ports:
+      - 8032:8032

@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import Container from "typedi";
-import Server from "./app/server";
+import App from "./app/app";
 
-const server = Container.get(Server);
+const server = Container.get(App);
 server.start();
