@@ -13,7 +13,7 @@ import RestService from "./services/rest.service";
 const logger = Logger.getLogger("Server");
 
 @Service()
-export default class Server {
+export default class App {
   // Listen to the specified port, use 9000 if not defined
   private readonly HOST = configuration.API_HOST;
   private readonly PORT = configuration.API_PORT;
