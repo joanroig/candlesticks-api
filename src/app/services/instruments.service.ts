@@ -1,8 +1,6 @@
 import { transformAndValidateSync } from "class-transformer-validator";
-import { Inject, Service } from "typedi";
+import { Service } from "typedi";
 import { Logger } from "../common/logger/logger";
-import CandlesticksDao from "../dao/candlesticks.dao";
-import InstrumentsDao from "../dao/instruments.dao";
 import { ISIN } from "../models/aliases.model";
 import {
   InstrumentEvent,
@@ -14,12 +12,6 @@ const logger = Logger.getLogger("InstrumentsService");
 
 @Service()
 export default class InstrumentsService extends StreamService {
-  @Inject()
-  private readonly instrumentsDao: InstrumentsDao;
-
-  @Inject()
-  private readonly candlesticksDao: CandlesticksDao;
-
   constructor() {
     super("instruments", InstrumentsService.name);
   }

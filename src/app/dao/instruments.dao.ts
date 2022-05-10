@@ -23,6 +23,10 @@ export default class InstrumentsDao implements DaoInterface {
     return this.instruments.delete(key);
   }
 
+  clear() {
+    this.instruments.clear();
+  }
+
   getKeys() {
     return [...this.instruments.keys()];
   }
