@@ -51,6 +51,7 @@ export default class CandleService implements ICandleService {
     if (!this.candleHistoryDao.has(quote.isin)) {
       this.candleHistoryDao.initialize(quote.isin);
     }
+
     const history = this.candleHistoryDao.get(quote.isin);
 
     // Unix time that represents the minute of a candle

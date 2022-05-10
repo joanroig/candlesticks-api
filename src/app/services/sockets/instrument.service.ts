@@ -51,10 +51,12 @@ export default class InstrumentService extends Socket {
     switch (instrumentEvent.type) {
       case InstrumentEventType.ADD:
         if (this.instrumentDao.has(instrument.isin)) {
-          logger.error(`Instrument ${instrument.isin} already exists`);
-        } else {
-          this.instrumentDao.set(instrument.isin, instrument);
+          logger.warn(
+            `Instrument ${instrument.isin} already exists, overwriting.`
+          );
         }
+        this.instrumentDao.set(instrument.isin, instrument);
+        this.candleHistoryDao.initialize(instrument.isin);
         break;
 
       case InstrumentEventType.DELETE:
