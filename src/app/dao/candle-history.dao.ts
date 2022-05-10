@@ -14,27 +14,12 @@ export default class CandleHistoryDao implements DaoInterface {
   private readonly candleHistoryMap = new Map<ISIN, CandleHistory>();
 
   constructor() {
-    // Schedule clearing old data
-    setInterval(() => {
-      this.startGarbageCollector();
-    }, configuration.CLEAN_SCHEDULE * 60000);
-  }
-
-  startGarbageCollector() {
-    logger.debug("Clearing old data...");
-    let count = 0;
-    Array.from(this.candleHistoryMap.values()).filter((history) => {
-      Array.from(history.keys()).filter((minute) => {
-        if (
-          Utils.getCurrentTime() - minute >
-          configuration.HISTORY_LIMIT * 60000
-        ) {
-          history.delete(minute);
-          count++;
-        }
-      });
-    });
-    logger.debug("Items cleared: ", count);
+    // Schedule clearing old data, only candles that surpassed the history limit will be removed
+    if (configuration.CLEAN_SCHEDULE > 0) {
+      setInterval(() => {
+        this.startGarbageCollector();
+      }, configuration.CLEAN_SCHEDULE * 60000);
+    }
   }
 
   has(key: string) {
@@ -64,5 +49,22 @@ export default class CandleHistoryDao implements DaoInterface {
 
   clear() {
     this.candleHistoryMap.clear();
+  }
+
+  private startGarbageCollector() {
+    logger.debug("Clearing old data...");
+    let count = 0;
+    Array.from(this.candleHistoryMap.values()).filter((history) => {
+      Array.from(history.keys()).filter((minute) => {
+        if (
+          Utils.getCurrentTime() - minute >
+          configuration.HISTORY_LIMIT * 60000
+        ) {
+          history.delete(minute);
+          count++;
+        }
+      });
+    });
+    logger.debug(`Items cleared: ${count}`);
   }
 }

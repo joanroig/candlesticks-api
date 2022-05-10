@@ -3,7 +3,7 @@ import configuration from "../../common/constants/configuration";
 import InstrumentNotFoundError from "../../common/errors/instrument-not-found-error";
 import { ICandleService } from "../../common/interfaces/candle.interface";
 import Utils from "../../common/utils/utils";
-import CandleHistoryDao from "../../dao/candle.dao";
+import CandleHistoryDao from "../../dao/candle-history.dao";
 import { ISIN } from "../../models/alias.model";
 import { Candle } from "../../models/candle.model";
 import { Quote } from "../../models/quote.model";
@@ -11,20 +11,18 @@ import { Quote } from "../../models/quote.model";
 @Service()
 export default class CandleService implements ICandleService {
   @Inject()
-  private readonly candleDao: CandleHistoryDao;
+  private readonly candleHistoryDao: CandleHistoryDao;
 
   private readonly limit = configuration.HISTORY_LIMIT;
 
   getCandles(isin: ISIN): Candle[] {
-    if (!this.candleDao.has(isin)) {
+    if (!this.candleHistoryDao.has(isin)) {
       throw new InstrumentNotFoundError(isin);
     }
 
-    const history = this.candleDao.get(isin);
-
+    const history = this.candleHistoryDao.get(isin);
     const currentMinute = Utils.getStartOfMinute(Utils.getCurrentTime());
     const startMinute = currentMinute - this.limit * 60000;
-
     const result: Candle[] = [];
     let previous: Candle;
 
@@ -50,10 +48,10 @@ export default class CandleService implements ICandleService {
   }
 
   parseQuote(quote: Quote) {
-    if (!this.candleDao.has(quote.isin)) {
-      this.candleDao.initialize(quote.isin);
+    if (!this.candleHistoryDao.has(quote.isin)) {
+      this.candleHistoryDao.initialize(quote.isin);
     }
-    const history = this.candleDao.get(quote.isin);
+    const history = this.candleHistoryDao.get(quote.isin);
 
     // Unix time that represents the minute of a candle
     const minute = Utils.getStartOfMinute(quote.timestamp);
@@ -80,10 +78,10 @@ export default class CandleService implements ICandleService {
   private createCandle(quote: Quote) {
     return new Candle(
       quote.timestamp,
-      quote.price,
-      quote.price,
-      quote.price,
       quote.timestamp,
+      quote.price,
+      quote.price,
+      quote.price,
       quote.price
     );
   }

@@ -1,5 +1,6 @@
 import { validationMetadatasToSchemas } from "class-validator-jsonschema";
 import { Application } from "express";
+import { Server } from "http";
 import morgan from "morgan";
 import "reflect-metadata";
 import {
@@ -34,10 +35,11 @@ export default class App {
 
   start() {
     this.socketsManager.connect();
-    this.initializeApi();
+    const server = this.initializeServer();
+    return server;
   }
 
-  private initializeApi() {
+  private initializeServer(): Server {
     // Allow DI in controllers, this needs to be done before any operation of routing-controllers
     useContainer(Container);
 
@@ -59,7 +61,7 @@ export default class App {
       this.setupSwagger(routingControllersOptions);
     }
 
-    this.app.listen(this.PORT, () => {
+    const server = this.app.listen(this.PORT, () => {
       // Print API information
       logger.info(`Server listening on ${this.HOST}:${this.PORT}`);
       logger.info("Exposed endpoints:");
@@ -70,6 +72,23 @@ export default class App {
         logger.info("Swagger specification:");
         logger.info(` - ${this.HOST}:${this.PORT}/docs`);
       }
+    });
+
+    // Respond to 'Ctrl+C'
+    process.on("SIGINT", () => {
+      this.safeShutdown(server);
+    });
+    // Server is shutting down
+    process.on("SIGTERM", () => {
+      this.safeShutdown(server);
+    });
+
+    return server;
+  }
+
+  private safeShutdown(server: Server) {
+    server.close(function () {
+      process.exit(0);
     });
   }
 

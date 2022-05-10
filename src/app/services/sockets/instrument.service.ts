@@ -2,7 +2,7 @@ import { transformAndValidateSync } from "class-transformer-validator";
 import { Inject, Service } from "typedi";
 import PartnerEndpoints from "../../common/constants/partner-endpoints";
 import Logger from "../../common/logger/logger";
-import CandleHistoryDao from "../../dao/candle.dao";
+import CandleHistoryDao from "../../dao/candle-history.dao";
 import InstrumentDao from "../../dao/instrument.dao";
 import { ISIN } from "../../models/alias.model";
 import {

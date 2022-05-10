@@ -2,7 +2,7 @@ import TypedEmitter from "typed-emitter";
 import { Inject, Service } from "typedi";
 import configuration from "../../common/constants/configuration";
 import Logger from "../../common/logger/logger";
-import CandleHistoryDao from "../../dao/candle.dao";
+import CandleHistoryDao from "../../dao/candle-history.dao";
 import InstrumentDao from "../../dao/instrument.dao";
 import { SocketEvent } from "../../models/socket-event.model";
 import InstrumentService from "./instrument.service";

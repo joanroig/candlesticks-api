@@ -11,31 +11,31 @@ export type CandleHistory = Map<number, Candle>;
 export class Candle {
   constructor(
     openTimestamp: number,
-    openPrice: Price,
-    highPrice: Price,
-    lowPrice: Price,
     closeTimestamp: number,
-    closingPrice: Price
+    openPrice: Price,
+    closePrice: Price,
+    highPrice: Price,
+    lowPrice: Price
   ) {
     this.openTimestamp = openTimestamp;
+    this.closeTimestamp = closeTimestamp;
     this.openPrice = openPrice;
+    this.closePrice = closePrice;
     this.highPrice = highPrice;
     this.lowPrice = lowPrice;
-    this.closeTimestamp = closeTimestamp;
-    this.closePrice = closingPrice;
   }
   @IsNumber()
   openTimestamp: number;
   @IsNumber()
+  closeTimestamp: number;
+  @IsNumber()
   openPrice: Price;
+  @IsNumber()
+  closePrice: Price;
   @IsNumber()
   highPrice: Price;
   @IsNumber()
   lowPrice: Price;
-  @IsNumber()
-  closeTimestamp: number;
-  @IsNumber()
-  closePrice: Price;
 }
 
 export class CandleFormatted {
@@ -43,16 +43,16 @@ export class CandleFormatted {
   @Expose()
   @Transform(({ obj }) => Utils.formatTime(obj.openTimestamp))
   openTimestamp: number;
-  @IsNumber()
-  openPrice: Price;
-  @IsNumber()
-  highPrice: Price;
-  @IsNumber()
-  lowPrice: Price;
   @IsString()
   @Expose()
   @Transform(({ obj }) => Utils.formatTime(obj.closeTimestamp))
   closeTimestamp: number;
   @IsNumber()
+  openPrice: Price;
+  @IsNumber()
   closePrice: Price;
+  @IsNumber()
+  highPrice: Price;
+  @IsNumber()
+  lowPrice: Price;
 }
