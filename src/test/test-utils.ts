@@ -6,8 +6,11 @@ export default class TestUtils {
     return 1652195760000;
   }
 
-  static getDefaultIsin() {
+  static getDefaultIsin1() {
     return "LJ4043660IX7";
+  }
+  static getDefaultIsin2() {
+    return "EP999000000";
   }
 
   static mockTimeOnce(time: number) {
