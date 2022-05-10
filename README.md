@@ -115,6 +115,12 @@ yarn start:partner-service
 
 ### Running the app
 
+Install the dependencies first:
+
+```
+yarn
+```
+
 To run the app you can use the following yarn commands
 
 ```
