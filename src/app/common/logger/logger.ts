@@ -1,6 +1,6 @@
 import winston, { format, transports } from "winston";
 
-export class Logger {
+export default class Logger {
   // Setup log format
   logFormat = winston.format.printf(
     (info) => `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`

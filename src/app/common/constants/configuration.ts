@@ -2,9 +2,11 @@ import config from "config";
 
 /**
  * Configuration readed from the config json file.
- * Numbers are checked, default values will be used in case a non-numeric value is provided
+ * Types are checked, default values will be used in case a wrong value is provided
  */
 export default {
+  SWAGGER: Boolean(config.get("swagger")) || false,
+  CORS: Boolean(config.get("cors")) || true,
   API_HOST: config.get("api-host"),
   API_PORT: Number(config.get("api-port")) || 9000,
   SOCKETS_URL: config.get("sockets-url"),

@@ -1,16 +1,25 @@
-import express from "express";
+import { validationMetadatasToSchemas } from "class-validator-jsonschema";
+import { Application } from "express";
+import morgan from "morgan";
 import "reflect-metadata";
-import { Inject, Service } from "typedi";
+import {
+  createExpressServer,
+  getMetadataArgsStorage,
+  RoutingControllersOptions,
+  useContainer,
+} from "routing-controllers";
+import { routingControllersToSpec } from "routing-controllers-openapi";
+import * as swaggerUiExpress from "swagger-ui-express";
+import Container, { Inject, Service } from "typedi";
 import configuration from "./common/constants/configuration";
-import endpoints from "./common/constants/endpoints";
-import InvalidParametersError from "./common/errors/invalid-parameters-error";
-import { Logger } from "./common/logger/logger";
-import errorHandler from "./middlewares/error.middleware";
-import InstrumentsService from "./services/instruments.service";
-import QuotesService from "./services/quotes.service";
-import RestService from "./services/rest.service";
+import Endpoints from "./common/constants/endpoints";
+import Logger from "./common/logger/logger";
+import CandleController from "./controllers/candle.controller";
+import InstrumentController from "./controllers/instrument.controller";
+import ErrorHandler from "./middlewares/error-handler.middleware";
+import SocketManager from "./services/sockets/socket-manager";
 
-const logger = Logger.getLogger("Server");
+const logger = Logger.getLogger("App");
 
 @Service()
 export default class App {
@@ -19,58 +28,74 @@ export default class App {
   private readonly PORT = configuration.API_PORT;
 
   @Inject()
-  private readonly quotesStreamService: QuotesService;
-  @Inject()
-  private readonly instrumentsService: InstrumentsService;
-  @Inject()
-  private readonly restService: RestService;
+  private readonly socketsManager: SocketManager;
 
-  private app: express.Application;
+  private app: Application;
 
   start() {
-    // Start express server
-    this.app = express();
-    this.connectWebservices();
+    this.socketsManager.connect();
     this.initializeApi();
-    this.initializeErrorHandler();
-  }
-
-  private connectWebservices() {
-    // Connect streams
-    this.instrumentsService.connect();
-    this.quotesStreamService.connect();
-  }
-
-  private initializeErrorHandler() {
-    this.app.use(errorHandler);
   }
 
   private initializeApi() {
-    // API exposed endpoints
-    this.app.get("/" + endpoints.CANDLES, (req, res) => {
-      const isin = req.query.isin as string;
-      const sort = req.query.sort as string;
-      const format = req.query.format as string;
+    // Allow DI in controllers, this needs to be done before any operation of routing-controllers
+    useContainer(Container);
 
-      if (!isin) {
-        throw new InvalidParametersError("isin");
-      }
+    // Set server configuration
+    const routingControllersOptions: RoutingControllersOptions = {
+      controllers: [InstrumentController, CandleController],
+      defaultErrorHandler: false,
+      middlewares: [ErrorHandler],
+      cors: configuration.CORS,
+    };
 
-      const result = this.restService.getCandlesticks(isin, sort, format);
-      return res.status(200).send(result);
-    });
+    this.app = createExpressServer(routingControllersOptions);
 
-    this.app.get("/" + endpoints.ISIN_LIST, (req, res) => {
-      const result = this.restService.getIsinList();
-      res.send(result);
-    });
+    // Print API calls
+    this.app.use(morgan("tiny"));
+
+    // Setup Swagger for development purposes
+    if (configuration.SWAGGER) {
+      this.setupSwagger(routingControllersOptions);
+    }
 
     this.app.listen(this.PORT, () => {
       // Print API information
       logger.info(`Server listening on ${this.HOST}:${this.PORT}`);
       logger.info("Exposed endpoints:");
-      logger.info(` - ${this.HOST}:${this.PORT}/${endpoints.CANDLES}`);
-      logger.info(` - ${this.HOST}:${this.PORT}/${endpoints.ISIN_LIST}`);
+      for (const entry of Object.values(Endpoints)) {
+        logger.info(` - ${this.HOST}:${this.PORT}/${entry}`);
+      }
+      if (configuration.SWAGGER) {
+        logger.info("Swagger specification:");
+        logger.info(` - ${this.HOST}:${this.PORT}/docs`);
+      }
     });
+  }
+
+  private setupSwagger(routingControllersOptions: RoutingControllersOptions) {
+    // Parse class-validator classes into JSON Schema:
+    const schemas = validationMetadatasToSchemas();
+
+    // Parse routing-controllers classes into OpenAPI spec:
+    const storage = getMetadataArgsStorage();
+    const spec = routingControllersToSpec(storage, routingControllersOptions, {
+      components: {
+        schemas,
+        securitySchemes: {
+          basicAuth: {
+            scheme: "basic",
+            type: "http",
+          },
+        },
+      },
+      info: {
+        description: "REST API for getting candlesticks updates.",
+        title: "Candlesticks API",
+        version: "1.0.0",
+      },
+    });
+
+    this.app.use("/docs", swaggerUiExpress.serve, swaggerUiExpress.setup(spec));
   }
 }

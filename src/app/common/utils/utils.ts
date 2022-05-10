@@ -1,9 +1,6 @@
 import { transformAndValidateSync } from "class-transformer-validator";
 import moment from "moment";
-import {
-  Candlestick,
-  CandlestickFormatted,
-} from "../../models/candlestick.model";
+import { Candle, CandleFormatted } from "../../models/candle.model";
 
 export default class Utils {
   /**
@@ -29,18 +26,15 @@ export default class Utils {
    * @returns string that represents the given time in format YYYY-MM-DD HH:mm:ss
    */
   static formatTime(timestamp: number): string {
-    return moment.unix(timestamp / 1000).format("YYYY-MM-DD HH:mm:ss");
+    return moment(timestamp).format("YYYY-MM-DD HH:mm:ss");
   }
 
   /**
-   * Transform a candlestick list to a more readable format, useful for debugging
-   * @param candlesticks candlestick list
-   * @returns formatted candlestick list
+   * Transform a candle list to a more readable format
+   * @param candles candle list
+   * @returns formatted candle list
    */
-  static formatCandlesticks(candles: Candlestick[]): CandlestickFormatted[] {
-    return transformAndValidateSync(
-      CandlestickFormatted,
-      candles
-    ) as CandlestickFormatted[];
+  static formatCandles(candles: Candle[]): CandleFormatted[] {
+    return transformAndValidateSync(CandleFormatted, candles);
   }
 }
