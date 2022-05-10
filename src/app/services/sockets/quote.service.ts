@@ -10,6 +10,9 @@ import Socket from "./socket";
 
 const logger = Logger.getLogger("QuoteService");
 
+/**
+ * Service that handles quote data received from the partner
+ */
 @Service()
 export default class QuoteService extends Socket {
   @Inject()

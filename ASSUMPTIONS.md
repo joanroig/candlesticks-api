@@ -2,22 +2,15 @@
 
 As the system scope is open, some assumptions have been made:
 
-## Authentication
-
-TODO
-
-## Calculations
-
-We assume that not all candlesticks will be needed at the same time, so we save each quote with a timestamp to calculate the candlesticks on demand.
-TODO: A real-time calculation mode can be enabled via the config.
-
-## Number of users
-
-TODO: Test how many users can handle, and check how to increase it (load balancer?)
-
 ## Instrument deletion
 
-After deleting an instrument, the related quotes and handlesticks are deleted as well.
+After deleting an instrument, the related quotes and handlesticks are deleted as well. If an instrument is added, but it was already there, the instrument and the candle history will be overwritten.
+
+## Persistence
+
+No persistence implemented, as everytime the system is bootstrapped all data needs to be cleared. The candlesticks are kept in a hashmap, and the old ones are removed after a configurable time (set the configuration clean-schedule to 0 in case you want to deactivate it).
+
+In case the system needs to scale up with multiple instances, a mongodb database can be used to track the candlesticks, but some effort will be needed to ensure synchronous access and that all data is up to date.
 
 ## Out of order
 
@@ -60,3 +53,7 @@ This can occasionate the next circumstance, which is on purpose:
 - A user requests data that contains cloned candlesticks
 - Instantly after, a quote generates a candlestick that was missing in the previous response
 - Instantly after, the same user requests the same data again. The response will be different, as one of the candlesticks is not cloned and it contains the real candlestick data instead of the cloned one.
+
+## Reconnections
+
+If the partner service is disconnected, all data must be cleared as the information will probably not be consistent.

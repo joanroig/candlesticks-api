@@ -22,6 +22,9 @@ import SocketManager from "./services/sockets/socket-manager";
 
 const logger = Logger.getLogger("App");
 
+/**
+ * App class that bootstraps the server
+ */
 @Service()
 export default class App {
   // Listen to the specified port, use 9000 if not defined

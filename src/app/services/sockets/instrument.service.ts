@@ -14,6 +14,9 @@ import Socket from "./socket";
 
 const logger = Logger.getLogger("InstrumentService");
 
+/**
+ * Service that handles instrument data received from the partner
+ */
 @Service()
 export default class InstrumentService extends Socket {
   @Inject()

@@ -10,6 +10,9 @@ import QuoteService from "./quote.service";
 
 const logger = Logger.getLogger("SocketManager");
 
+/**
+ * Service that controls and reconnects the sockets
+ */
 @Service()
 export default class SocketManager {
   @Inject()

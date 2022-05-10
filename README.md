@@ -133,6 +133,36 @@ Once the server is running, you can check the results at
 http://localhost:9000/candlesticks?isin={ISIN}
 ```
 
+### Running the tests
+
+Run the tests with:
+
+```
+yarn test
+```
+
+To get the coverage and open the lcov-report:
+
+```
+yarn test:coverage
+```
+
+The coverage report will be available in the root folder.
+
+You can also check the coverage from the continuous integration workflow:
+https://github.com/joanroig/candlesticks-api/actions/workflows/tests.yml
+
+### Environment configuration
+
+Use the config folder to specify the configuration of the app depending on the environment. The configuration file name should match the node environment value.
+
+Example to configure a production environment in a Dockerfile step, which will use production.json:
+
+```
+# Set node environment to production
+ENV NODE_ENV production
+```
+
 ### PartnerService
 
 This repository includes a runnable JAR (the partner service) that provides the websockets mentioned below.
