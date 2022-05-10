@@ -1,4 +1,6 @@
 {
+  "swagger": true,
+  "cors": false,
   "api-host": "http://localhost",
   "api-port": 9000,
   "sockets-url": "localhost:8032",

@@ -1,10 +1,14 @@
 import { Expose, Transform } from "class-transformer";
+import { IsNumber, IsString } from "class-validator";
 import Utils from "../common/utils/utils";
-import { Price } from "./aliases.model";
+import { Price } from "./alias.model";
 
-export type CandlestickHistory = Map<number, Candlestick>;
+/**
+ * Map where the key identifies the start of a minute in unix format, and the value is a candle object
+ */
+export type CandleHistory = Map<number, Candle>;
 
-export class Candlestick {
+export class Candle {
   constructor(
     openTimestamp: number,
     openPrice: Price,
@@ -20,23 +24,35 @@ export class Candlestick {
     this.closeTimestamp = closeTimestamp;
     this.closePrice = closingPrice;
   }
+  @IsNumber()
   openTimestamp: number;
+  @IsNumber()
   openPrice: Price;
+  @IsNumber()
   highPrice: Price;
+  @IsNumber()
   lowPrice: Price;
+  @IsNumber()
   closeTimestamp: number;
+  @IsNumber()
   closePrice: Price;
 }
 
-export class CandlestickFormatted {
+export class CandleFormatted {
+  @IsString()
   @Expose()
   @Transform(({ obj }) => Utils.formatTime(obj.openTimestamp))
   openTimestamp: number;
+  @IsNumber()
   openPrice: Price;
+  @IsNumber()
   highPrice: Price;
+  @IsNumber()
   lowPrice: Price;
+  @IsString()
   @Expose()
   @Transform(({ obj }) => Utils.formatTime(obj.closeTimestamp))
   closeTimestamp: number;
+  @IsNumber()
   closePrice: Price;
 }

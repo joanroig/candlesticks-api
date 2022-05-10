@@ -1,7 +1,9 @@
 /**
- * API endpoints
+ * Candlesticks API endpoints
  */
-export default {
-  CANDLES: "candlesticks",
-  ISIN_LIST: "isinlist",
-} as const;
+enum Endpoints {
+  CANDLES = "candlesticks",
+  INSTRUMENTS = "instruments",
+}
+
+export default Endpoints;

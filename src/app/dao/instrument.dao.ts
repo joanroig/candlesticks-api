@@ -1,10 +1,10 @@
 import { Service } from "typedi";
 import { DaoInterface } from "../common/interfaces/dao.interface";
-import { ISIN } from "../models/aliases.model";
+import { ISIN } from "../models/alias.model";
 import { Instrument } from "../models/instrument.model";
 
 @Service()
-export default class InstrumentsDao implements DaoInterface {
+export default class InstrumentDao implements DaoInterface {
   private readonly instruments = new Map<ISIN, Instrument>();
 
   has(key: string) {
@@ -25,6 +25,10 @@ export default class InstrumentsDao implements DaoInterface {
 
   clear() {
     this.instruments.clear();
+  }
+
+  getInstruments() {
+    return [...this.instruments.values()];
   }
 
   getKeys() {
