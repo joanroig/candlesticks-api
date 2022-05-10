@@ -1,4 +1,3 @@
-import config from "config";
 import { Inject, Service } from "typedi";
 import configuration from "../common/constants/configuration";
 import InstrumentNotFoundError from "../common/errors/instrument-not-found-error";
@@ -14,7 +13,7 @@ export default class CandlesticksService implements CandlesticksInterface {
   @Inject()
   private readonly candlesticksDao: CandlesticksDao;
 
-  private readonly limit = configuration.CANDLESTICK_LIMIT;
+  private readonly limit = configuration.HISTORY_LIMIT;
 
   /**
    * Get the candlesticks of an instrument

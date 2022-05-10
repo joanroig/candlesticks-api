@@ -2,7 +2,6 @@ import { transformAndValidateSync } from "class-transformer-validator";
 import { Inject, Service } from "typedi";
 import { Logger } from "../common/logger/logger";
 import Utils from "../common/utils/utils";
-import InstrumentsDao from "../dao/instruments.dao";
 import { Quote, QuoteEvent } from "../models/quote.model";
 import CandlesticksService from "./candlesticks.service";
 import StreamService from "./stream.service";
@@ -11,8 +10,6 @@ const logger = Logger.getLogger("QuotesService");
 
 @Service()
 export default class QuotesService extends StreamService {
-  @Inject()
-  private readonly instrumentsDao: InstrumentsDao;
   @Inject()
   private readonly candlesticksService: CandlesticksService;
 

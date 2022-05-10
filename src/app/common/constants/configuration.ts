@@ -9,5 +9,6 @@ export default {
   API_PORT: Number(config.get("api-port")) || 9000,
   SOCKETS_URL: config.get("sockets-url"),
   SOCKETS_RECONNECT_TIME: Number(config.get("sockets-reconnect-time")) || 5,
-  CANDLESTICK_LIMIT: Number(config.get("candlestick-limit")) || 30,
+  HISTORY_LIMIT: Number(config.get("history-limit")) || 30,
+  CLEAN_SCHEDULE: Number(config.get("clean-schedule")) || 10,
 } as const;

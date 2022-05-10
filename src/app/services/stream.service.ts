@@ -1,6 +1,9 @@
+import { Inject } from "typedi";
 import WebSocket from "ws";
 import configuration from "../common/constants/configuration";
 import { Logger } from "../common/logger/logger";
+import CandlesticksDao from "../dao/candlesticks.dao";
+import InstrumentsDao from "../dao/instruments.dao";
 
 /**
  * Base class to be extended for each resource that needs to be tracked
@@ -12,6 +15,12 @@ export default class StreamService {
   ws: WebSocket;
   streamUrl = configuration.SOCKETS_URL;
   reconnectTime = configuration.SOCKETS_RECONNECT_TIME;
+
+  @Inject()
+  protected readonly instrumentsDao: InstrumentsDao;
+
+  @Inject()
+  protected readonly candlesticksDao: CandlesticksDao;
 
   /**
    * Connect to the websocket
@@ -33,6 +42,8 @@ export default class StreamService {
 
     this.ws.onopen = () => {
       this.logger.info(`Socket connected: ${this.resourceName}`);
+      this.instrumentsDao.clear();
+      this.candlesticksDao.clear();
     };
 
     this.ws.onclose = (e) => {

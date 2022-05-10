@@ -3,5 +3,6 @@
   "api-port": 9000,
   "sockets-url": "localhost:8032",
   "sockets-reconnect-time": 5,
-  "candlestick-limit": 30
+  "history-limit": 30,
+  "clean-schedule": 10
 }
