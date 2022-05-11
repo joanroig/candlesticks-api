@@ -1,14 +1,15 @@
 import { transformAndValidateSync } from "class-transformer-validator";
 import moment from "moment";
 import { Candle, CandleFormatted } from "../../models/candle.model";
+import configuration from "../constants/configuration";
 
 export default class Utils {
   /**
-   * Get current time
+   * Get current time in the defined timezone
    * @returns number that represents the current time in milliseconds
    */
   static getCurrentTime(): number {
-    return moment.now();
+    return moment.utc().add(configuration.TIMEZONE_OFFSET, "hours").valueOf();
   }
 
   /**
@@ -21,12 +22,15 @@ export default class Utils {
   }
 
   /**
-   * Format the given timestamp to a readable format
+   * Format the given timestamp to a readable format in the defined timezone
    * @param timestamp time in milliseconds
    * @returns string that represents the given time in format YYYY-MM-DD HH:mm:ss
    */
   static formatTime(timestamp: number): string {
-    return moment(timestamp).format("YYYY-MM-DD HH:mm:ss");
+    return moment(timestamp)
+      .utc()
+      .add(configuration.TIMEZONE_OFFSET, "hours")
+      .format("YYYY-MM-DD HH:mm:ss");
   }
 
   /**

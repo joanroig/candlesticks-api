@@ -15,6 +15,7 @@ export default {
   SOCKETS_RECONNECT_TIME: checkNumber("sockets-reconnect-time", 5),
   HISTORY_LIMIT: checkNumber("history-limit", 30),
   CLEAN_SCHEDULE: checkNumber("clean-schedule", 10),
+  TIMEZONE_OFFSET: checkNumber("timezone-offset", 2),
 } as const;
 
 function checkString(id: string, defaultValue: string): string {
