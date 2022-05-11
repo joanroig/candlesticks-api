@@ -1,12 +1,12 @@
 {
   "swagger": false,
   "cors": true,
-  "morgan": false,
+  "morgan": true,
   "log-level": "info",
   "api-host": "http://localhost",
-  "api-port": 9000,
+  "api-port": 9001,
   "sockets-url": "localhost:8032",
-  "sockets-reconnect-time": 5,
-  "history-limit": 30,
-  "clean-schedule": 10
+  "sockets-reconnect-time": 1,
+  "history-limit": 5,
+  "clean-schedule": 0
 }

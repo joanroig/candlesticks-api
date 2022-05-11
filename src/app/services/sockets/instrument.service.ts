@@ -41,6 +41,7 @@ export default class InstrumentService extends Socket {
     const instrumentEvent = transformAndValidateSync(InstrumentEvent, data, {
       transformer: { excludeExtraneousValues: true },
     }) as InstrumentEvent;
+
     this.handleInstrument(instrumentEvent);
   }
 

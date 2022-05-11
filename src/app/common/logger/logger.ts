@@ -1,4 +1,5 @@
 import winston, { format, transports } from "winston";
+import configuration from "../constants/configuration";
 
 export default class Logger {
   // Setup log format
@@ -7,7 +8,7 @@ export default class Logger {
   );
   options: winston.LoggerOptions = {
     exitOnError: false,
-    level: "debug",
+    level: configuration.LOG_LEVEL,
   };
 
   logger: winston.Logger;

@@ -30,7 +30,9 @@ export default class SocketManager {
   private instrumentEvents: TypedEmitter<SocketEvent>;
   private quoteEvents: TypedEmitter<SocketEvent>;
 
-  private reconnectTime = configuration.SOCKETS_RECONNECT_TIME;
+  private readonly reconnectTime = configuration.SOCKETS_RECONNECT_TIME;
+
+  private reconnect = true;
 
   /**
    * Connect to the instruments first, if success connect to the quotes.
@@ -52,6 +54,11 @@ export default class SocketManager {
     });
   }
 
+  disconnect() {
+    this.reconnect = false;
+    this.disconnected();
+  }
+
   private disconnected() {
     // Remove event listeners
     this.instrumentEvents?.removeAllListeners();
@@ -65,10 +72,12 @@ export default class SocketManager {
     this.instrumentDao.clear();
     this.candleHistoryDao.clear();
 
-    // Reconnect after defined time
-    logger.info(`Trying to reconnect in ${this.reconnectTime} seconds.`);
-    setTimeout(() => {
-      this.connect();
-    }, this.reconnectTime * 1000);
+    if (this.reconnect) {
+      // Reconnect after defined time
+      logger.info(`Trying to reconnect in ${this.reconnectTime} seconds.`);
+      setTimeout(() => {
+        this.connect();
+      }, this.reconnectTime * 1000);
+    }
   }
 }

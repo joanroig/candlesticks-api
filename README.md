@@ -1,9 +1,11 @@
 # Candlesticks API
 
+[![Tests CI](https://github.com/joanroig/candlesticks-api/actions/workflows/tests.yml/badge.svg)](https://github.com/joanroig/candlesticks-api/actions/workflows/tests.yml)
+
 System that enables users to view price histories.
 It will receive updates from a partner service, transform these updates and provide the aggregated data through an endpoint.
 
-> The implementation is based on [assumptions](ASSUMPTIONS.md) to develop a MVP within 5 days.
+> The implementation is based on [assumptions](ASSUMPTIONS.md) to develop an MVP within 5 days.
 
 ## Content
 
