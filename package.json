@@ -1,5 +1,6 @@
 {
   "name": "candlesticks-api",
+  "description": "REST API that consumes live data via WebSockets and enables users to view price histories.",
   "version": "1.0.0",
   "main": "index.ts",
   "repository": "https://github.com/joanroig/candlesticks-api.git",
@@ -8,20 +9,20 @@
   "scripts": {
     "build": "rimraf ./build && tsc -p tsconfig.build.json",
     "start": "node build/index.js",
-    "start:dev": "nodemon",
+    "start:dev": "cross-env NODE_ENV=dev nodemon",
     "start:partner-service": "java -jar partner-service-1.0.1-all.jar --port=8032",
     "docker:build": "docker-compose build --no-cache",
     "docker:up": "docker-compose up",
     "docker:down": "docker-compose down",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:ci": "jest --ci --collectCoverage --detectOpenHandles",
+    "test:ci": "cross-env NODE_ENV=ci jest --ci --collectCoverage --detectOpenHandles",
     "test:coverage": "jest --collectCoverage",
     "posttest:coverage": "ts-node commands/open-coverage.command.ts",
     "lint": "eslint . --ext .ts",
     "format": "eslint . --ext .ts --fix",
     "format:staged": "lint-staged",
-    "prepare": "husky install"
+    "prepare": "is-ci || husky install"
   },
   "dependencies": {
     "class-transformer": "^0.5.1",
@@ -30,7 +31,9 @@
     "class-validator-jsonschema": "^3.1.0",
     "config": "^3.3.7",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "express": "^4.18.1",
+    "is-ci": "^3.0.1",
     "jest": "^28.1.0",
     "moment": "^2.29.3",
     "morgan": "^1.10.0",
@@ -53,7 +56,7 @@
     "@types/express": "4.17.13",
     "@types/jest": "27.5.0",
     "@types/morgan": "^1.9.3",
-    "@types/node": "17.0.31",
+    "@types/node": "17.0.32",
     "@types/supertest": "2.0.12",
     "@types/swagger-ui-express": "^4.1.3",
     "@types/validator": "13.7.2",
@@ -66,7 +69,8 @@
     "lint-staged": "12.4.1",
     "rimraf": "3.0.2",
     "supertest": "6.2.3",
-    "typed-emitter": "^2.1.0"
+    "typed-emitter": "^2.1.0",
+    "wait-for-expect": "^3.0.2"
   },
   "engines": {
     "npm": "please-use-yarn",

@@ -35,11 +35,17 @@ export default class App {
   private readonly socketsManager: SocketManager;
 
   private app: Application;
+  private server: Server;
 
   start() {
     this.socketsManager.connect();
-    const server = this.initializeServer();
-    return server;
+    this.server = this.initializeServer();
+    return this.server;
+  }
+
+  stop() {
+    this.socketsManager.disconnect();
+    this.server.close();
   }
 
   private initializeServer(): Server {
@@ -57,7 +63,9 @@ export default class App {
     this.app = createExpressServer(routingControllersOptions);
 
     // Print API calls
-    this.app.use(morgan("tiny"));
+    if (configuration.MORGAN) {
+      this.app.use(morgan("tiny"));
+    }
 
     // Setup Swagger for development purposes
     if (configuration.SWAGGER) {
@@ -66,6 +74,7 @@ export default class App {
 
     const server = this.app.listen(this.PORT, () => {
       // Print API information
+      logger.info(`Environment: ${process.env.NODE_ENV || "default"}`);
       logger.info(`Server listening on ${this.HOST}:${this.PORT}`);
       logger.info("Exposed endpoints:");
       for (const entry of Object.values(Endpoints)) {

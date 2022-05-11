@@ -1,8 +1,8 @@
 {
-  "swagger": false,
-  "cors": true,
-  "morgan": false,
-  "log-level": "info",
+  "swagger": true,
+  "cors": false,
+  "morgan": true,
+  "log-level": "debug",
   "api-host": "http://localhost",
   "api-port": 9000,
   "sockets-url": "localhost:8032",
