@@ -1,11 +1,15 @@
 # Candlesticks API
 
-[![Tests CI](https://github.com/joanroig/candlesticks-api/actions/workflows/tests.yml/badge.svg)](https://github.com/joanroig/candlesticks-api/actions/workflows/tests.yml)
-
 System that enables users to view price histories.
 It will receive updates from a partner service, transform these updates and provide the aggregated data through an endpoint.
 
 > The implementation is based on [assumptions](ASSUMPTIONS.md) to develop an MVP within 5 days.
+
+| CI                                                                                                                                                                          | Statements                                                                                 | Branches                                                                       | Functions                                                                                | Lines                                                                            |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [![Tests CI](https://github.com/joanroig/candlesticks-api/actions/workflows/tests.yml/badge.svg)](https://github.com/joanroig/candlesticks-api/actions/workflows/tests.yml) | ![Statements](https://img.shields.io/badge/statements-96.12%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-78.82%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-91.91%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-95.91%25-brightgreen.svg?style=flat) |
+
+---
 
 ## Content
 

@@ -9,4 +9,6 @@ export default {
   setupFilesAfterEnv: ["jest-extended/all"],
   coveragePathIgnorePatterns: ["<rootDir>/src/test/"],
   testTimeout: 20000,
+  runner: "groups",
+  coverageReporters: ["json-summary"],
 };
