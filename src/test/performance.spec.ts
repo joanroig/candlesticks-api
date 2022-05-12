@@ -5,8 +5,8 @@ import Container from "typedi";
 import { parse } from "url";
 import waitForExpect from "wait-for-expect";
 import { Server, WebSocket, WebSocketServer } from "ws";
-import TestUtils from "../test/test-utils";
-import App from "./app";
+import App from "../app/app";
+import TestUtils from "./test-utils";
 
 let appServer: AppServer;
 
@@ -18,6 +18,11 @@ let quotesSocket: WebSocket;
 let instrumentsServer: Server;
 let quotesServer: Server;
 
+/**
+ * Performance tests
+ *
+ * @group performance
+ */
 describe("Performance tests", () => {
   beforeEach(async () => {
     let instrumentsConnected = false;
@@ -89,102 +94,60 @@ describe("Performance tests", () => {
     Container.reset();
   });
 
-  it("should process a minimum of 50K instruments and 50K quotes per second (independently)", async () => {
-    // Number of operations
-    const ops = 50000;
-
-    // Add instruments and calculate time spent
-    let startTime = performance.now();
-    for (let i = 0; i < ops; i++) {
-      const instrument = `{"data":{"description":"mock","isin":"A${i}"},"type":"ADD"}`;
-      instrumentsSocket.send(instrument);
-    }
-    let elapsed = performance.now() - startTime;
-    console.log(`Sent ${ops} instruments in ${elapsed} milliseconds`);
-
-    // Wait one second from the first instrument that was sent
-    await TestUtils.wait(1000 - elapsed);
-
-    // Get all instruments
-    await request(appServer)
-      .get(`/instruments/count`)
-      .expect("Content-Type", /json/)
-      .expect(200)
-      .then((res) => {
-        expect(res.body.count).toBe(ops);
-      });
-
-    // Add quotes and calculate time spent
-    startTime = performance.now();
-    for (let i = 0; i < ops; i++) {
-      const quote = `{"data":{"price":367.3409,"isin":"A${i}"},"type":"QUOTE"}`;
-      quotesSocket.send(quote);
-    }
-    elapsed = performance.now() - startTime;
-    console.log(`Sent ${ops} quotes in ${elapsed} milliseconds`);
-
-    // Wait one second from the first quote that was sent
-    await TestUtils.wait(1000 - elapsed);
-
-    // Get all candles
-    await request(appServer)
-      .get(`/candlesticks/count`)
-      .expect("Content-Type", /json/)
-      .expect(200)
-      .then((res) => {
-        expect(res.body.count).toBe(ops);
-      });
+  it("should check how many operations can handle per second", async () => {
+    const result = await runPerfTest(50000);
+    console.info(
+      `50k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
+    );
   });
 
-  describe("Batch performance tests", () => {
-    it("should check how many operations can handle per second", async () => {
-      const result = await runPerfTest(80000);
-      console.info(
-        `80k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
-      );
-    });
+  it("should check how many operations can handle per second", async () => {
+    const result = await runPerfTest(80000);
+    console.info(
+      `80k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
+    );
+  });
 
-    it("should check how many operations can handle per second", async () => {
-      const result = await runPerfTest(100000);
-      console.info(
-        `100k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
-      );
-    });
+  it("should check how many operations can handle per second", async () => {
+    const result = await runPerfTest(100000);
+    console.info(
+      `100k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
+    );
+  });
 
-    it("should check how many operations can handle per second", async () => {
-      const result = await runPerfTest(120000);
-      console.info(
-        `120k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
-      );
-    });
+  it("should check how many operations can handle per second", async () => {
+    const result = await runPerfTest(120000);
+    console.info(
+      `120k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
+    );
+  });
 
-    it("should check how many operations can handle per second", async () => {
-      const result = await runPerfTest(150000);
-      console.info(
-        `150K: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
-      );
-    });
+  it("should check how many operations can handle per second", async () => {
+    const result = await runPerfTest(150000);
+    console.info(
+      `150K: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
+    );
+  });
 
-    it("should check how many operations can handle per second", async () => {
-      const result = await runPerfTest(200000);
-      console.info(
-        `200k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
-      );
-    });
+  it("should check how many operations can handle per second", async () => {
+    const result = await runPerfTest(200000);
+    console.info(
+      `200k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
+    );
+  });
 
-    it("should check how many operations can handle per second", async () => {
-      const result = await runPerfTest(250000);
-      console.info(
-        `250k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
-      );
-    });
+  it("should check how many operations can handle per second", async () => {
+    const result = await runPerfTest(250000);
+    console.info(
+      `250k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
+    );
+  });
 
-    it("should check how many operations can handle per second", async () => {
-      const result = await runPerfTest(300000);
-      console.info(
-        `300k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
-      );
-    });
+  it("should check how many operations can handle per second", async () => {
+    const result = await runPerfTest(300000);
+    console.info(
+      `300k: ${result.instrumentsCount} instruments, ${result.candlesCount} candles`
+    );
   });
 
   async function runPerfTest(ops: number) {

@@ -1,5 +1,4 @@
 import { createServer, Server as AppServer } from "http";
-import { performance } from "perf_hooks";
 import request from "supertest";
 import Container from "typedi";
 import { parse } from "url";
@@ -153,6 +152,30 @@ describe("API Tests", () => {
     });
   });
 
+  describe("GET /instruments/count", () => {
+    it("should return the number of instruments", async () => {
+      // Get count
+      await request(appServer)
+        .get(`/instruments/count`)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          expect(res.body.count).toBe(0);
+        });
+
+      // Add one instrument
+      instrumentsSocket.send(JSON.stringify(mockInstrumentAdd));
+      await TestUtils.wait();
+
+      // Get count
+      await request(appServer)
+        .get(`/instruments/count`)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          expect(res.body.count).toBe(1);
+        });
+    });
+  });
+
   describe("GET /instruments", () => {
     it("should return 200 and an empty array", async () => {
       // Get all instruments
@@ -232,6 +255,34 @@ describe("API Tests", () => {
         .expect(200)
         .then((res) => {
           expect(res.body).toMatchObject([]);
+        });
+    });
+  });
+
+  describe("GET /candlesticks/count", () => {
+    it("should return the number of candles", async () => {
+      // Get count
+      await request(appServer)
+        .get(`/candlesticks/count`)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          expect(res.body.count).toBe(0);
+        });
+
+      // Add one instrument
+      instrumentsSocket.send(JSON.stringify(mockInstrumentAdd));
+      await TestUtils.wait();
+
+      // Add one quote, which will add one candle
+      quotesSocket.send(JSON.stringify(mockQuote));
+      await TestUtils.wait();
+
+      // Get count
+      await request(appServer)
+        .get(`/candlesticks/count`)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          expect(res.body.count).toBe(1);
         });
     });
   });

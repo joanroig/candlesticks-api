@@ -19,3 +19,6 @@ fi
 
 # Format staged files with eslint and prettier as a plugin
 yarn run format:staged
+
+# Run tests with coverage and update badges
+yarn run test:ci && yarn istanbul-badges-readme && git add 'README.md'
