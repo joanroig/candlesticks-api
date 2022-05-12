@@ -34,4 +34,8 @@ export default class InstrumentDao implements DaoInterface {
   getKeys() {
     return [...this.instruments.keys()];
   }
+
+  countAllInstruments() {
+    return this.instruments.size;
+  }
 }

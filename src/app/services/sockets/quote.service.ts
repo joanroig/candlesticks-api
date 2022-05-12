@@ -1,8 +1,6 @@
-import { transformAndValidateSync } from "class-transformer-validator";
 import { Inject, Service } from "typedi";
 import PartnerEndpoints from "../../common/constants/partner-endpoints";
 import Logger from "../../common/logger/logger";
-import Utils from "../../common/utils/utils";
 import InstrumentDao from "../../dao/instrument.dao";
 import { Quote, QuoteEvent } from "../../models/quote.model";
 import CandleService from "../candles/candle.service";
@@ -26,11 +24,16 @@ export default class QuoteService extends Socket {
   }
 
   protected onMessage(data: string) {
-    const quoteEvent = transformAndValidateSync(QuoteEvent, data, {
-      transformer: { excludeExtraneousValues: true },
-    }) as QuoteEvent;
-    const quote = quoteEvent.data;
-    this.handleQuote(quote);
+    // const quoteEvent = transformAndValidateSync(QuoteEvent, data, {
+    //   transformer: { excludeExtraneousValues: true },
+    // }) as QuoteEvent;
+    const quoteEvent: QuoteEvent = JSON.parse(data);
+    if (quoteEvent.data?.isin && quoteEvent.data?.price) {
+      const quote = quoteEvent.data;
+      this.handleQuote(quote);
+    } else {
+      throw new Error("Quote parsing problem");
+    }
   }
 
   /**
@@ -39,11 +42,9 @@ export default class QuoteService extends Socket {
    */
   private handleQuote(quote: Quote) {
     if (!this.instrumentsDao.has(quote.isin)) {
-      logger.error(`No instrument found for the ISIN ${quote.isin}`);
+      // logger.error(`No instrument found for the ISIN ${quote.isin}`);
       return;
     }
-    // Add timestamp to the quote
-    quote.timestamp = Utils.getCurrentTime();
     this.candleService.parseQuote(quote);
   }
 }

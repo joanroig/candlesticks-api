@@ -1,4 +1,3 @@
-import moment from "moment";
 import "reflect-metadata";
 import Container from "typedi";
 import CandleHistoryDaoMock from "../../../test/mocks/candle-history.dao.mock";
@@ -9,6 +8,8 @@ import CandleHistoryDao from "../../dao/candle-history.dao";
 import CandleService from "./candle.service";
 
 let service: CandleService;
+const currentTime = CandleHistoryDaoMock.getCurrentTime();
+
 describe("Candle Service Tests", () => {
   beforeAll(() => {
     // Prepare mocks and set them in the container
@@ -21,9 +22,13 @@ describe("Candle Service Tests", () => {
     Container.reset();
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("should find two candles", () => {
     // Mock time
-    TestUtils.mockTimeOnce(TestUtils.getMockTime());
+    TestUtils.mockTime(currentTime);
     const candles = service.getCandles(TestUtils.getDefaultIsin1());
     expect(candles).toBeArrayOfSize(2);
   });
@@ -44,14 +49,13 @@ describe("Candle Service Tests", () => {
    */
   it("should get an increasing amount of candles every minute because of the fill method", () => {
     const initialResults = 2;
+    const startTime = currentTime;
 
     // Test how the system reacts after ten minutes with no quote updates
     for (let minute = 0; minute < 10; minute++) {
-      const time = moment(TestUtils.getMockTime())
-        .add(minute, "minutes")
-        .valueOf();
+      const time = startTime + minute * 60 * 1000;
 
-      TestUtils.mockTimeOnce(time);
+      TestUtils.mockTime(time);
       const candles = service.getCandles(TestUtils.getDefaultIsin1());
 
       let expectedCount = minute + initialResults;
@@ -108,13 +112,14 @@ describe("Candle Service Tests", () => {
       service.getCandles(isin);
     }).toThrow(InstrumentNotFoundError);
 
+    // Send a quote that should create the candle
+    TestUtils.mockTime(time1);
     service.parseQuote({
       isin: isin,
       price: price1,
       timestamp: time1,
     });
 
-    TestUtils.mockTimeOnce(time1);
     let candles = service.getCandles(isin);
 
     // Check if the quote has been processed properly
@@ -127,13 +132,13 @@ describe("Candle Service Tests", () => {
     expect(candles[0].lowPrice).toBe(price1);
 
     // Send another quote that should update the candle
+    TestUtils.mockTime(time2);
     service.parseQuote({
       isin: isin,
       price: price2,
       timestamp: time2,
     });
 
-    TestUtils.mockTimeOnce(time2);
     candles = service.getCandles(isin);
 
     // Check if the quote has been processed properly
@@ -146,13 +151,13 @@ describe("Candle Service Tests", () => {
     expect(candles[0].lowPrice).toBe(price1);
 
     // Send another quote, which is out of order, that should update the candle
+    TestUtils.mockTime(time3);
     service.parseQuote({
       isin: isin,
       price: price3,
       timestamp: time3,
     });
 
-    TestUtils.mockTimeOnce(time3);
     candles = service.getCandles(isin);
 
     // Check if the quote has been processed properly

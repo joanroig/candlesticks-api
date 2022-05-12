@@ -22,4 +22,11 @@ export default class InstrumentController {
       return this.instrumentService.getInstruments();
     }
   }
+
+  @Get("/count")
+  count(): { count: number } {
+    {
+      return { count: this.instrumentService.countInstruments() };
+    }
+  }
 }

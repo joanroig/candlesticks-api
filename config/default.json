@@ -9,5 +9,6 @@
   "sockets-reconnect-time": 5,
   "history-limit": 30,
   "clean-schedule": 10,
-  "timezone-offset": 2
+  "locale": "de-DE",
+  "timezone": "Europe/Berlin"
 }

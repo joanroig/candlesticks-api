@@ -35,7 +35,7 @@ export default class CandleController {
 
     let candles = this.candleService.getCandles(isin);
 
-    if (sort === SortMode.ASC) {
+    if (sort === SortMode.DESC) {
       candles = candles.reverse();
     }
 
@@ -43,6 +43,13 @@ export default class CandleController {
       return Utils.formatCandles(candles);
     } else {
       return candles;
+    }
+  }
+
+  @Get("/count")
+  count(): { count: number } {
+    {
+      return { count: this.candleService.countCandles() };
     }
   }
 }

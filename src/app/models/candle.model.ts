@@ -1,12 +1,12 @@
 import { Expose, Transform } from "class-transformer";
 import { IsNumber, IsString } from "class-validator";
 import Utils from "../common/utils/utils";
-import { Price } from "./alias.model";
+import { Instant, Price } from "./alias.model";
 
 /**
  * Map where the key identifies the start of a minute in unix format, and the value is a candle object
  */
-export type CandleHistory = Map<number, Candle>;
+export type CandleHistory = Map<Instant, Candle>;
 
 export class Candle {
   constructor(
