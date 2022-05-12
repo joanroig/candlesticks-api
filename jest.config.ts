@@ -8,4 +8,5 @@ export default {
   testEnvironment: "node",
   setupFilesAfterEnv: ["jest-extended/all"],
   coveragePathIgnorePatterns: ["<rootDir>/src/test/"],
+  testTimeout: 20000,
 };

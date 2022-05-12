@@ -1,4 +1,3 @@
-import { transformAndValidateSync } from "class-transformer-validator";
 import { Inject, Service } from "typedi";
 import PartnerEndpoints from "../../common/constants/partner-endpoints";
 import Logger from "../../common/logger/logger";
@@ -37,12 +36,20 @@ export default class InstrumentService extends Socket {
     return this.instrumentDao.getKeys();
   }
 
-  protected onMessage(data: string) {
-    const instrumentEvent = transformAndValidateSync(InstrumentEvent, data, {
-      transformer: { excludeExtraneousValues: true },
-    }) as InstrumentEvent;
+  countInstruments(): number {
+    return this.instrumentDao.countAllInstruments();
+  }
 
-    this.handleInstrument(instrumentEvent);
+  protected onMessage(data: string) {
+    // const instrumentEvent = transformAndValidateSync(InstrumentEvent, data, {
+    //   transformer: { excludeExtraneousValues: true },
+    // }) as InstrumentEvent;
+    const instrumentEvent: InstrumentEvent = JSON.parse(data);
+    if (instrumentEvent.data?.isin) {
+      this.handleInstrument(instrumentEvent);
+    } else {
+      throw new Error("Instrument parsing problem");
+    }
   }
 
   /**

@@ -55,6 +55,7 @@ export default class SocketManager {
   }
 
   disconnect() {
+    this.candleHistoryDao.stopGarbageCollector();
     this.reconnect = false;
     this.disconnected();
   }

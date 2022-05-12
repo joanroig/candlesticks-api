@@ -54,7 +54,10 @@ export default class CandleService implements ICandleService {
 
     const history = this.candleHistoryDao.get(quote.isin);
 
-    // Unix time that represents the minute of a candle
+    // Add timestamp to the quote
+    quote.timestamp = Utils.getCurrentTime();
+
+    // Unix time that represents the minute of a candle, used as the identifier in the history
     const minute = Utils.getStartOfMinute(quote.timestamp);
 
     let candle: Candle;
@@ -69,6 +72,10 @@ export default class CandleService implements ICandleService {
 
     // Save candle into the candles dao by reference
     history.set(minute, candle);
+  }
+
+  countCandles() {
+    return this.candleHistoryDao.countTotalCandles();
   }
 
   /**

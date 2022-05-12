@@ -1,13 +1,14 @@
 {
   "swagger": false,
   "cors": true,
-  "morgan": true,
+  "morgan": false,
   "log-level": "info",
   "api-host": "http://localhost",
   "api-port": 9001,
   "sockets-url": "localhost:8032",
-  "sockets-reconnect-time": 1,
+  "sockets-reconnect-time": 0.1,
   "history-limit": 5,
   "clean-schedule": 0,
-  "timezone-offset": 2
+  "locale": "de-DE",
+  "timezone": "Europe/Berlin"
 }

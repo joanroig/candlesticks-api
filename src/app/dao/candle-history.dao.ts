@@ -12,11 +12,12 @@ const logger = Logger.getLogger("CandleHistoryDao");
 export default class CandleHistoryDao implements DaoInterface {
   // Candle history map, where an ISIN identifies a CandleHistory
   private readonly candleHistoryMap = new Map<ISIN, CandleHistory>();
+  private garbageCollectorInterval;
 
   constructor() {
     // Schedule clearing old data, only candles that surpassed the history limit will be removed
     if (configuration.CLEAN_SCHEDULE > 0) {
-      setInterval(() => {
+      this.garbageCollectorInterval = setInterval(() => {
         this.startGarbageCollector();
       }, configuration.CLEAN_SCHEDULE * 60000);
     }
@@ -27,9 +28,9 @@ export default class CandleHistoryDao implements DaoInterface {
   }
 
   /**
-   * Return the candlestick history of a given isin
+   * Return the candle history of a given isin
    * @param key isin
-   * @returns candlestick history
+   * @returns candle history
    */
   get(key: string): CandleHistory {
     return this.candleHistoryMap.get(key);
@@ -51,11 +52,25 @@ export default class CandleHistoryDao implements DaoInterface {
     this.candleHistoryMap.clear();
   }
 
+  countTotalCandles() {
+    const list = [...this.candleHistoryMap.values()];
+    return list.reduce(
+      (accumulator, currentValue) => accumulator + currentValue.size,
+      0
+    );
+  }
+
+  stopGarbageCollector() {
+    if (this.garbageCollectorInterval) {
+      clearInterval(this.garbageCollectorInterval);
+    }
+  }
+
   private startGarbageCollector() {
     logger.debug("Clearing old data...");
     let count = 0;
-    Array.from(this.candleHistoryMap.values()).filter((history) => {
-      Array.from(history.keys()).filter((minute) => {
+    Array.from(this.candleHistoryMap.values()).forEach((history) => {
+      Array.from(history.keys()).forEach((minute) => {
         if (
           Utils.getCurrentTime() - minute >
           configuration.HISTORY_LIMIT * 60000
