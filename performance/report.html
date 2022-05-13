@@ -1,0 +1,2396 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Artillery report</title>
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.6.0/chart.min.js"
+          integrity="sha384-scMuAXtFmPAlw0+pXLvnpHCt6VHh7AknTPdNrwiph5BA6MJWysg5WgSDl7r63txN"
+          crossorigin="anonymous"></script>
+
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=PT+Serif:400,700,400italic' rel='stylesheet' type='text/css'>
+  <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' rel='stylesheet' type='text/css'>
+  <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"
+          integrity="sha384-v7eExOYhwaHa3+GhP+lHytJsMcidazNdjiaggRhdbvVTVTCjweLpa23t37ZKxaCf"
+          crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"
+          integrity="sha384-H6KKS1H1WwuERMSm+54dYLzjg0fKqRK5ZRyASdbrI/lwrCc6bXEmtGYr5SwvP1pZ"
+          crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.0/ace.js" charset="utf=8"
+          integrity="sha384-5wv3YDwWXIxqoY02AhdpzGtKzSx7IoLw86ObEolywSYRKXx9E4rqmrU2R29LNIjR"
+          crossorigin="anonymous"></script>
+
+  <style>
+  body, p, li {
+    font-family: sans-serif;
+    font-size: 10pt;
+  }
+
+  h1 {
+    font-size: 18pt;
+    font-weight: bold;
+  }
+
+  #errorsContainer > p {
+    color: #009900;
+  }
+
+  #footer {
+    padding: 1em;
+    font-size: 0.8em;
+    color: #999;
+    text-align: center;
+    margin-top: 1em;
+    background-color: #eee;
+  }
+  #editor {
+    font-size: 8pt;
+    height: 20em;
+  }
+
+  .chart-container {
+    margin: 20px 0px;
+  }
+  </style>
+
+  <style>
+    h1 {
+      line-height: 200%;
+    }
+
+    body {
+      background-color: #fcfcfc;
+    }
+
+    .container {
+      width: 100%;
+      min-width: 960px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="row" id="header">
+  <div class="col-lg-offset-4">
+    <pre style="font-family: monospace; font-size: 10pt; font-weight: 700; background-color: #fcfcfc; border: none;">
+        ___         __  _ ____                  _
+  _____/   |  _____/ /_(_) / /__  _______  __  (_)___  _____
+ /____/ /| | / ___/ __/ / / / _ \/ ___/ / / / / / __ \/____/
+/____/ ___ |/ /  / /_/ / / /  __/ /  / /_/ / / / /_/ /____/
+    /_/  |_/_/   \__/_/_/_/\___/_/   \__, (_)_/\____/
+                                    /____/
+    </pre>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-12">
+    <h1 class="text-center" id="page-title">Test run on <span id="timestamp"></span></h1>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-3">
+    <h4>
+      Summary
+    </h4>
+    <table class="table table-bordered table-hover table-condensed">
+      <tbody>
+        <tr>
+          <td>Test duration</td>
+          <td><span id="testDuration">0</span> sec</td>
+        </tr>
+        <tr>
+          <td>Virtual Users created</td>
+          <td><span id="vuCreated">0</span></td>
+        </tr>
+
+        <tr>
+          <td>Virtual Users completed</td>
+          <td><span id="vuCompleted">0</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col-lg-5" id="scenarioCountsContainer">
+    <div>
+      <h4>
+        Scenario counts
+      </h4>
+      <p></p>
+
+      <table class="table table-bordered table-hover table-condensed" id="scenarioCounts">
+      </table>
+    </div>
+  </div>
+
+  <div class="col-lg-3">
+    <div id="errorsContainer">
+      <h4>
+        Errors
+      </h4>
+      <p></p>
+
+      <table class="table table-bordered table-hover table-condensed" id="errors">
+      </table>
+    </div>
+  </div>
+</div> <!-- /.row -->
+
+<div class="row">
+  <div class="col-lg-12" id="customCountersContainer">
+    <div>
+      <h4>
+        Counters
+      </h4>
+      <p></p>
+
+      <table class="table table-bordered table-hover table-condensed" id="customCountersTable">
+      </table>
+    </div>
+  </div>
+</div> <!-- /.row -->
+
+<div class="row">
+  <div class="text-center col-lg-12">
+    <h3>Charts</h3>
+  </div>
+</div>
+
+<div id="errorsChartsRow" class="row">
+  <div class="chart-container text-center col-lg-12">
+    <h4>
+      <i class="fas fa-chart-area"></i> Errors at intervals
+    </h4>
+    <canvas id="errorsAtIntervalsChart"></canvas>
+  </div>
+</div>
+
+<div id="customCountersChartsRow" class="row">
+  <div class="chart-container text-center col-lg-12">
+    <h4>
+      <i class="fas fa-chart-area"></i>Counters at intervals
+    </h4>
+    <canvas id="customCountersAtIntervalsChart"></canvas>
+  </div>
+</div>
+
+<div id="customStats"></div>
+
+<div class="row">
+  <div class="codes-line text-center col-lg-12"></div>
+</div>
+<div class="row">
+  <div class="errors-line text-center col-lg-12"></div>
+</div>
+
+</div>
+
+<div class="row">
+  <div class="col-lg-8 col-lg-offset-2">
+    <h3 class="text-center">Raw report data</h3>
+    <p>This is the raw JSON stats output that the report was generated from.</p>
+    <div id="editor">
+    </div>
+  </div>
+</div>
+
+<script charset="utf-8">
+const Report = {
+  "aggregate": {
+    "counters": {
+      "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 82050,
+      "vusers.created": 82050,
+      "http.requests": 164100,
+      "http.codes.200": 164100,
+      "http.responses": 164100,
+      "vusers.failed": 0,
+      "vusers.completed": 82050
+    },
+    "rates": {
+      "http.request_rate": 502
+    },
+    "firstCounterAt": 1652473948517,
+    "firstHistogramAt": 1652473948538,
+    "lastCounterAt": 1652474269724,
+    "lastHistogramAt": 1652474269724,
+    "firstMetricAt": 1652473948517,
+    "lastMetricAt": 1652474269724,
+    "period": 1652474260000,
+    "summaries": {
+      "http.response_time": {
+        "min": 0,
+        "max": 541,
+        "count": 164100,
+        "p50": 24.8,
+        "median": 24.8,
+        "p75": 70.1,
+        "p90": 149.9,
+        "p95": 214.9,
+        "p99": 314.2,
+        "p999": 432.7
+      },
+      "vusers.session_length": {
+        "min": 1001.6,
+        "max": 1836.6,
+        "count": 82050,
+        "p50": 1107.9,
+        "median": 1107.9,
+        "p75": 1224.4,
+        "p90": 1326.4,
+        "p95": 1380.5,
+        "p99": 1495.5,
+        "p999": 1686.1
+      }
+    }
+  },
+  "intermediate": [
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 33,
+        "vusers.created": 33,
+        "http.requests": 46,
+        "http.codes.200": 46,
+        "http.responses": 46,
+        "vusers.failed": 0,
+        "vusers.completed": 13
+      },
+      "rates": {
+        "http.request_rate": 34
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652473948517,
+      "firstHistogramAt": 1652473948538,
+      "lastCounterAt": 1652473949884,
+      "lastHistogramAt": 1652473949884,
+      "firstMetricAt": 1652473948517,
+      "lastMetricAt": 1652473949884,
+      "period": "1652473940000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 2,
+          "count": 46,
+          "p50": 1,
+          "median": 1,
+          "p75": 1,
+          "p90": 1,
+          "p95": 2,
+          "p99": 2,
+          "p999": 2
+        },
+        "vusers.session_length": {
+          "min": 1006.5,
+          "max": 1056.9,
+          "count": 13,
+          "p50": 1022.7,
+          "median": 1022.7,
+          "p75": 1043.3,
+          "p90": 1043.3,
+          "p95": 1043.3,
+          "p99": 1043.3,
+          "p999": 1043.3
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 200,
+        "vusers.created": 200,
+        "http.requests": 400,
+        "http.codes.200": 400,
+        "http.responses": 400,
+        "vusers.failed": 0,
+        "vusers.completed": 200
+      },
+      "rates": {
+        "http.request_rate": 40
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652473950183,
+      "firstHistogramAt": 1652473950187,
+      "lastCounterAt": 1652473959858,
+      "lastHistogramAt": 1652473959858,
+      "firstMetricAt": 1652473950183,
+      "lastMetricAt": 1652473959858,
+      "period": "1652473950000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 5,
+          "count": 400,
+          "p50": 1,
+          "median": 1,
+          "p75": 2,
+          "p90": 2,
+          "p95": 3,
+          "p99": 4,
+          "p999": 5
+        },
+        "vusers.session_length": {
+          "min": 1004.4,
+          "max": 1021.4,
+          "count": 200,
+          "p50": 1002.4,
+          "median": 1002.4,
+          "p75": 1002.4,
+          "p90": 1022.7,
+          "p95": 1022.7,
+          "p99": 1022.7,
+          "p999": 1022.7
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 211,
+        "vusers.created": 211,
+        "http.requests": 414,
+        "http.codes.200": 413,
+        "http.responses": 413,
+        "vusers.failed": 0,
+        "vusers.completed": 203
+      },
+      "rates": {
+        "http.request_rate": 44
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652473960183,
+      "firstHistogramAt": 1652473960186,
+      "lastCounterAt": 1652473969999,
+      "lastHistogramAt": 1652473969978,
+      "firstMetricAt": 1652473960183,
+      "lastMetricAt": 1652473969999,
+      "period": "1652473960000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 6,
+          "count": 413,
+          "p50": 1,
+          "median": 1,
+          "p75": 1,
+          "p90": 2,
+          "p95": 2,
+          "p99": 6,
+          "p999": 6
+        },
+        "vusers.session_length": {
+          "min": 1003.6,
+          "max": 1020.1,
+          "count": 203,
+          "p50": 1002.4,
+          "median": 1002.4,
+          "p75": 1002.4,
+          "p90": 1002.4,
+          "p95": 1002.4,
+          "p99": 1022.7,
+          "p999": 1022.7
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 494,
+        "vusers.created": 494,
+        "http.requests": 959,
+        "http.codes.200": 960,
+        "http.responses": 960,
+        "vusers.failed": 0,
+        "vusers.completed": 466
+      },
+      "rates": {
+        "http.request_rate": 99
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652473970000,
+      "firstHistogramAt": 1652473970001,
+      "lastCounterAt": 1652473979998,
+      "lastHistogramAt": 1652473979998,
+      "firstMetricAt": 1652473970000,
+      "lastMetricAt": 1652473979998,
+      "period": "1652473970000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 9,
+          "count": 960,
+          "p50": 1,
+          "median": 1,
+          "p75": 1,
+          "p90": 1,
+          "p95": 2,
+          "p99": 3,
+          "p999": 6
+        },
+        "vusers.session_length": {
+          "min": 1003.3,
+          "max": 1057.2,
+          "count": 466,
+          "p50": 1002.4,
+          "median": 1002.4,
+          "p75": 1002.4,
+          "p90": 1002.4,
+          "p95": 1002.4,
+          "p99": 1022.7,
+          "p999": 1022.7
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 971,
+        "vusers.created": 971,
+        "http.requests": 1894,
+        "http.codes.200": 1893,
+        "http.responses": 1893,
+        "vusers.failed": 0,
+        "vusers.completed": 922
+      },
+      "rates": {
+        "http.request_rate": 190
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652473980000,
+      "firstHistogramAt": 1652473980001,
+      "lastCounterAt": 1652473989999,
+      "lastHistogramAt": 1652473989982,
+      "firstMetricAt": 1652473980000,
+      "lastMetricAt": 1652473989999,
+      "period": "1652473980000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 16,
+          "count": 1893,
+          "p50": 1,
+          "median": 1,
+          "p75": 1,
+          "p90": 2,
+          "p95": 3,
+          "p99": 5,
+          "p999": 13.9
+        },
+        "vusers.session_length": {
+          "min": 1002.5,
+          "max": 1064.3,
+          "count": 922,
+          "p50": 1002.4,
+          "median": 1002.4,
+          "p75": 1002.4,
+          "p90": 1002.4,
+          "p95": 1002.4,
+          "p99": 1022.7,
+          "p999": 1043.3
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 1449,
+        "vusers.created": 1449,
+        "http.requests": 2838,
+        "http.codes.200": 2836,
+        "http.responses": 2836,
+        "vusers.failed": 0,
+        "vusers.completed": 1389
+      },
+      "rates": {
+        "http.request_rate": 285
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652473990001,
+      "firstHistogramAt": 1652473990002,
+      "lastCounterAt": 1652473999999,
+      "lastHistogramAt": 1652473999985,
+      "firstMetricAt": 1652473990001,
+      "lastMetricAt": 1652473999999,
+      "period": "1652473990000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 52,
+          "count": 2836,
+          "p50": 1,
+          "median": 1,
+          "p75": 2,
+          "p90": 3,
+          "p95": 5,
+          "p99": 23.8,
+          "p999": 47.9
+        },
+        "vusers.session_length": {
+          "min": 1002.6,
+          "max": 1103.3,
+          "count": 1389,
+          "p50": 1002.4,
+          "median": 1002.4,
+          "p75": 1002.4,
+          "p90": 1002.4,
+          "p95": 1022.7,
+          "p99": 1043.3,
+          "p999": 1107.9
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 3813,
+        "http.codes.200": 3816,
+        "http.responses": 3816,
+        "vusers.failed": 0,
+        "vusers.completed": 1874,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 1939,
+        "vusers.created": 1939
+      },
+      "rates": {
+        "http.request_rate": 384
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474000000,
+      "firstHistogramAt": 1652474000002,
+      "lastCounterAt": 1652474009999,
+      "lastHistogramAt": 1652474009999,
+      "firstMetricAt": 1652474000000,
+      "lastMetricAt": 1652474009999,
+      "period": "1652474000000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 71,
+          "count": 3816,
+          "p50": 1,
+          "median": 1,
+          "p75": 2,
+          "p90": 5,
+          "p95": 7.9,
+          "p99": 30.9,
+          "p999": 62.2
+        },
+        "vusers.session_length": {
+          "min": 1002.3,
+          "max": 1082.3,
+          "count": 1874,
+          "p50": 1002.4,
+          "median": 1002.4,
+          "p75": 1002.4,
+          "p90": 1022.7,
+          "p95": 1043.3,
+          "p99": 1064.4,
+          "p999": 1085.9
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 4751,
+        "http.codes.200": 4747,
+        "http.responses": 4747,
+        "vusers.failed": 0,
+        "vusers.completed": 2359,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 2391,
+        "vusers.created": 2391
+      },
+      "rates": {
+        "http.request_rate": 476
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474010000,
+      "firstHistogramAt": 1652474010002,
+      "lastCounterAt": 1652474019999,
+      "lastHistogramAt": 1652474019993,
+      "firstMetricAt": 1652474010000,
+      "lastMetricAt": 1652474019999,
+      "period": "1652474010000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 100,
+          "count": 4747,
+          "p50": 2,
+          "median": 2,
+          "p75": 3,
+          "p90": 7.9,
+          "p95": 18,
+          "p99": 44.3,
+          "p999": 94.6
+        },
+        "vusers.session_length": {
+          "min": 1002,
+          "max": 1097.9,
+          "count": 2359,
+          "p50": 1002.4,
+          "median": 1002.4,
+          "p75": 1002.4,
+          "p90": 1022.7,
+          "p95": 1043.3,
+          "p99": 1064.4,
+          "p999": 1085.9
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 5681,
+        "http.codes.200": 5684,
+        "http.responses": 5684,
+        "vusers.failed": 0,
+        "vusers.completed": 2821,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 2863,
+        "vusers.created": 2863
+      },
+      "rates": {
+        "http.request_rate": 570
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474020002,
+      "firstHistogramAt": 1652474020004,
+      "lastCounterAt": 1652474029999,
+      "lastHistogramAt": 1652474029999,
+      "firstMetricAt": 1652474020002,
+      "lastMetricAt": 1652474029999,
+      "period": "1652474020000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 151,
+          "count": 5684,
+          "p50": 2,
+          "median": 2,
+          "p75": 5,
+          "p90": 15,
+          "p95": 37.7,
+          "p99": 92.8,
+          "p999": 141.2
+        },
+        "vusers.session_length": {
+          "min": 1001.9,
+          "max": 1157.6,
+          "count": 2821,
+          "p50": 1002.4,
+          "median": 1002.4,
+          "p75": 1022.7,
+          "p90": 1064.4,
+          "p95": 1085.9,
+          "p99": 1130.2,
+          "p999": 1153.1
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 6003,
+        "http.codes.200": 5999,
+        "http.responses": 5999,
+        "vusers.failed": 0,
+        "vusers.completed": 3000,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3001,
+        "vusers.created": 3001
+      },
+      "rates": {
+        "http.request_rate": 600
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474030000,
+      "firstHistogramAt": 1652474030001,
+      "lastCounterAt": 1652474039999,
+      "lastHistogramAt": 1652474039988,
+      "firstMetricAt": 1652474030000,
+      "lastMetricAt": 1652474039999,
+      "period": "1652474030000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 213,
+          "count": 5999,
+          "p50": 10.9,
+          "median": 10.9,
+          "p75": 39.3,
+          "p90": 82.3,
+          "p95": 113.3,
+          "p99": 156,
+          "p999": 206.5
+        },
+        "vusers.session_length": {
+          "min": 1001.7,
+          "max": 1343.9,
+          "count": 3000,
+          "p50": 1064.4,
+          "median": 1064.4,
+          "p75": 1107.9,
+          "p90": 1153.1,
+          "p95": 1200.1,
+          "p99": 1249.1,
+          "p999": 1326.4
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 5966,
+        "http.codes.200": 5916,
+        "http.responses": 5916,
+        "vusers.failed": 0,
+        "vusers.completed": 2980,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 2981,
+        "vusers.created": 2981
+      },
+      "rates": {
+        "http.request_rate": 600
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474040000,
+      "firstHistogramAt": 1652474040005,
+      "lastCounterAt": 1652474049946,
+      "lastHistogramAt": 1652474049939,
+      "firstMetricAt": 1652474040000,
+      "lastMetricAt": 1652474049946,
+      "period": "1652474040000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 291,
+          "count": 5916,
+          "p50": 16.9,
+          "median": 16.9,
+          "p75": 44.3,
+          "p90": 80.6,
+          "p95": 106.7,
+          "p99": 175.9,
+          "p999": 267.8
+        },
+        "vusers.session_length": {
+          "min": 1002.3,
+          "max": 1504,
+          "count": 2980,
+          "p50": 1085.9,
+          "median": 1085.9,
+          "p75": 1130.2,
+          "p90": 1176.4,
+          "p95": 1249.1,
+          "p99": 1408.4,
+          "p999": 1465.9
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3018,
+        "vusers.created": 3018,
+        "http.requests": 6032,
+        "http.codes.200": 6085,
+        "http.responses": 6085,
+        "vusers.failed": 0,
+        "vusers.completed": 3020
+      },
+      "rates": {
+        "http.request_rate": 607
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474050001,
+      "firstHistogramAt": 1652474050010,
+      "lastCounterAt": 1652474059998,
+      "lastHistogramAt": 1652474059998,
+      "firstMetricAt": 1652474050001,
+      "lastMetricAt": 1652474059998,
+      "period": "1652474050000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 358,
+          "count": 6085,
+          "p50": 24.8,
+          "median": 24.8,
+          "p75": 63.4,
+          "p90": 125.2,
+          "p95": 186.8,
+          "p99": 273.2,
+          "p999": 347.3
+        },
+        "vusers.session_length": {
+          "min": 1002.4,
+          "max": 1430.5,
+          "count": 3020,
+          "p50": 1107.9,
+          "median": 1107.9,
+          "p75": 1176.4,
+          "p90": 1249.1,
+          "p95": 1300.1,
+          "p99": 1380.5,
+          "p999": 1408.4
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.codes.200": 5844,
+        "http.responses": 5844,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 2966,
+        "vusers.created": 2966,
+        "http.requests": 5960,
+        "vusers.failed": 0,
+        "vusers.completed": 2901
+      },
+      "rates": {
+        "http.request_rate": 598
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474060000,
+      "firstHistogramAt": 1652474060004,
+      "lastCounterAt": 1652474069999,
+      "lastHistogramAt": 1652474069999,
+      "firstMetricAt": 1652474060000,
+      "lastMetricAt": 1652474069999,
+      "period": "1652474060000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 444,
+          "count": 5844,
+          "p50": 56.3,
+          "median": 56.3,
+          "p75": 133,
+          "p90": 247.2,
+          "p95": 295.9,
+          "p99": 407.5,
+          "p999": 441.5
+        },
+        "vusers.session_length": {
+          "min": 1002.5,
+          "max": 1655.9,
+          "count": 2901,
+          "p50": 1224.4,
+          "median": 1224.4,
+          "p75": 1300.1,
+          "p90": 1380.5,
+          "p95": 1436.8,
+          "p99": 1495.5,
+          "p999": 1652.8
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 5990,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3036,
+        "vusers.created": 3036,
+        "http.codes.200": 6031,
+        "http.responses": 6031,
+        "vusers.failed": 0,
+        "vusers.completed": 3045
+      },
+      "rates": {
+        "http.request_rate": 600
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474070000,
+      "firstHistogramAt": 1652474070000,
+      "lastCounterAt": 1652474079999,
+      "lastHistogramAt": 1652474079996,
+      "firstMetricAt": 1652474070000,
+      "lastMetricAt": 1652474079999,
+      "period": "1652474070000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 385,
+          "count": 6031,
+          "p50": 45.2,
+          "median": 45.2,
+          "p75": 87.4,
+          "p90": 153,
+          "p95": 194.4,
+          "p99": 273.2,
+          "p999": 308
+        },
+        "vusers.session_length": {
+          "min": 1002.8,
+          "max": 1527.5,
+          "count": 3045,
+          "p50": 1153.1,
+          "median": 1153.1,
+          "p75": 1224.4,
+          "p90": 1300.1,
+          "p95": 1353.1,
+          "p99": 1465.9,
+          "p999": 1525.7
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 5971,
+        "http.codes.200": 6013,
+        "http.responses": 6013,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3000,
+        "vusers.created": 3000,
+        "vusers.failed": 0,
+        "vusers.completed": 2950
+      },
+      "rates": {
+        "http.request_rate": 600
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474080000,
+      "firstHistogramAt": 1652474080005,
+      "lastCounterAt": 1652474089999,
+      "lastHistogramAt": 1652474089994,
+      "firstMetricAt": 1652474080000,
+      "lastMetricAt": 1652474089999,
+      "period": "1652474080000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 452,
+          "count": 6013,
+          "p50": 44.3,
+          "median": 44.3,
+          "p75": 94.6,
+          "p90": 186.8,
+          "p95": 262.5,
+          "p99": 333.7,
+          "p999": 432.7
+        },
+        "vusers.session_length": {
+          "min": 1002.4,
+          "max": 1563.9,
+          "count": 2950,
+          "p50": 1200.1,
+          "median": 1200.1,
+          "p75": 1249.1,
+          "p90": 1353.1,
+          "p95": 1408.4,
+          "p99": 1495.5,
+          "p999": 1525.7
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 6078,
+        "http.codes.200": 6083,
+        "http.responses": 6083,
+        "vusers.failed": 0,
+        "vusers.completed": 3090,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 2999,
+        "vusers.created": 2999
+      },
+      "rates": {
+        "http.request_rate": 607
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474090002,
+      "firstHistogramAt": 1652474090010,
+      "lastCounterAt": 1652474099999,
+      "lastHistogramAt": 1652474099995,
+      "firstMetricAt": 1652474090002,
+      "lastMetricAt": 1652474099999,
+      "period": "1652474090000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 328,
+          "count": 6083,
+          "p50": 37,
+          "median": 37,
+          "p75": 79.1,
+          "p90": 159.2,
+          "p95": 194.4,
+          "p99": 252.2,
+          "p999": 314.2
+        },
+        "vusers.session_length": {
+          "min": 1002.8,
+          "max": 1576.8,
+          "count": 3090,
+          "p50": 1153.1,
+          "median": 1153.1,
+          "p75": 1249.1,
+          "p90": 1326.4,
+          "p95": 1380.5,
+          "p99": 1495.5,
+          "p999": 1556.5
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 6004,
+        "http.codes.200": 6028,
+        "http.responses": 6028,
+        "vusers.failed": 0,
+        "vusers.completed": 3014,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3002,
+        "vusers.created": 3002
+      },
+      "rates": {
+        "http.request_rate": 600
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474100000,
+      "firstHistogramAt": 1652474100007,
+      "lastCounterAt": 1652474109999,
+      "lastHistogramAt": 1652474109999,
+      "firstMetricAt": 1652474100000,
+      "lastMetricAt": 1652474109999,
+      "period": "1652474100000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 396,
+          "count": 6028,
+          "p50": 45.2,
+          "median": 45.2,
+          "p75": 104.6,
+          "p90": 202.4,
+          "p95": 262.5,
+          "p99": 383.8,
+          "p999": 391.6
+        },
+        "vusers.session_length": {
+          "min": 1003.8,
+          "max": 1583.3,
+          "count": 3014,
+          "p50": 1200.1,
+          "median": 1200.1,
+          "p75": 1274.3,
+          "p90": 1326.4,
+          "p95": 1436.8,
+          "p99": 1495.5,
+          "p999": 1556.5
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.codes.200": 5965,
+        "http.responses": 5965,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3000,
+        "vusers.created": 3000,
+        "http.requests": 5963,
+        "vusers.failed": 0,
+        "vusers.completed": 2962
+      },
+      "rates": {
+        "http.request_rate": 600
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474110000,
+      "firstHistogramAt": 1652474110000,
+      "lastCounterAt": 1652474119999,
+      "lastHistogramAt": 1652474119999,
+      "firstMetricAt": 1652474110000,
+      "lastMetricAt": 1652474119999,
+      "period": "1652474110000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 342,
+          "count": 5965,
+          "p50": 26.8,
+          "median": 26.8,
+          "p75": 71.5,
+          "p90": 149.9,
+          "p95": 228.2,
+          "p99": 314.2,
+          "p999": 340.4
+        },
+        "vusers.session_length": {
+          "min": 1002.1,
+          "max": 1656.6,
+          "count": 2962,
+          "p50": 1130.2,
+          "median": 1130.2,
+          "p75": 1249.1,
+          "p90": 1326.4,
+          "p95": 1353.1,
+          "p99": 1495.5,
+          "p999": 1620
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 2958,
+        "vusers.created": 2958,
+        "http.requests": 5868,
+        "http.codes.200": 5861,
+        "http.responses": 5861,
+        "vusers.failed": 0,
+        "vusers.completed": 2906
+      },
+      "rates": {
+        "http.request_rate": 597
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474120000,
+      "firstHistogramAt": 1652474120000,
+      "lastCounterAt": 1652474129861,
+      "lastHistogramAt": 1652474129840,
+      "firstMetricAt": 1652474120000,
+      "lastMetricAt": 1652474129861,
+      "period": "1652474120000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 299,
+          "count": 5861,
+          "p50": 30.9,
+          "median": 30.9,
+          "p75": 73,
+          "p90": 144,
+          "p95": 179.5,
+          "p99": 247.2,
+          "p999": 278.7
+        },
+        "vusers.session_length": {
+          "min": 1002.3,
+          "max": 1564.8,
+          "count": 2906,
+          "p50": 1130.2,
+          "median": 1130.2,
+          "p75": 1200.1,
+          "p90": 1300.1,
+          "p95": 1326.4,
+          "p99": 1465.9,
+          "p999": 1556.5
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3002,
+        "vusers.created": 3002,
+        "http.requests": 6029,
+        "http.codes.200": 5921,
+        "http.responses": 5921,
+        "vusers.failed": 0,
+        "vusers.completed": 2949
+      },
+      "rates": {
+        "http.request_rate": 607
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474130062,
+      "firstHistogramAt": 1652474130071,
+      "lastCounterAt": 1652474139999,
+      "lastHistogramAt": 1652474139999,
+      "firstMetricAt": 1652474130062,
+      "lastMetricAt": 1652474139999,
+      "period": "1652474130000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 455,
+          "count": 5921,
+          "p50": 32.8,
+          "median": 32.8,
+          "p75": 77.5,
+          "p90": 162.4,
+          "p95": 223.7,
+          "p99": 301.9,
+          "p999": 432.7
+        },
+        "vusers.session_length": {
+          "min": 1001.6,
+          "max": 1692.3,
+          "count": 2949,
+          "p50": 1130.2,
+          "median": 1130.2,
+          "p75": 1249.1,
+          "p90": 1326.4,
+          "p95": 1408.4,
+          "p99": 1525.7,
+          "p999": 1686.1
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 6116,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3040,
+        "vusers.created": 3040,
+        "http.codes.200": 5992,
+        "http.responses": 5992,
+        "vusers.failed": 0,
+        "vusers.completed": 3050
+      },
+      "rates": {
+        "http.request_rate": 613
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474140000,
+      "firstHistogramAt": 1652474140001,
+      "lastCounterAt": 1652474149999,
+      "lastHistogramAt": 1652474149999,
+      "firstMetricAt": 1652474140000,
+      "lastMetricAt": 1652474149999,
+      "period": "1652474140000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 426,
+          "count": 5992,
+          "p50": 30.3,
+          "median": 30.3,
+          "p75": 83.9,
+          "p90": 149.9,
+          "p95": 206.5,
+          "p99": 354.3,
+          "p999": 415.8
+        },
+        "vusers.session_length": {
+          "min": 1001.7,
+          "max": 1729.9,
+          "count": 3050,
+          "p50": 1130.2,
+          "median": 1130.2,
+          "p75": 1249.1,
+          "p90": 1380.5,
+          "p95": 1408.4,
+          "p99": 1652.8,
+          "p999": 1720.2
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3000,
+        "vusers.created": 3000,
+        "http.requests": 6004,
+        "http.codes.200": 6240,
+        "http.responses": 6240,
+        "vusers.failed": 0,
+        "vusers.completed": 3112
+      },
+      "rates": {
+        "http.request_rate": 600
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474150000,
+      "firstHistogramAt": 1652474150002,
+      "lastCounterAt": 1652474159998,
+      "lastHistogramAt": 1652474159984,
+      "firstMetricAt": 1652474150000,
+      "lastMetricAt": 1652474159998,
+      "period": "1652474150000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 438,
+          "count": 6240,
+          "p50": 43.4,
+          "median": 43.4,
+          "p75": 89.1,
+          "p90": 172.5,
+          "p95": 267.8,
+          "p99": 415.8,
+          "p999": 415.8
+        },
+        "vusers.session_length": {
+          "min": 1002,
+          "max": 1708.6,
+          "count": 3112,
+          "p50": 1176.4,
+          "median": 1176.4,
+          "p75": 1274.3,
+          "p90": 1380.5,
+          "p95": 1436.8,
+          "p99": 1495.5,
+          "p999": 1620
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.codes.200": 5981,
+        "http.responses": 5981,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3000,
+        "vusers.created": 3000,
+        "http.requests": 6021,
+        "vusers.failed": 0,
+        "vusers.completed": 3009
+      },
+      "rates": {
+        "http.request_rate": 606
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474160000,
+      "firstHistogramAt": 1652474160000,
+      "lastCounterAt": 1652474169997,
+      "lastHistogramAt": 1652474169994,
+      "firstMetricAt": 1652474160000,
+      "lastMetricAt": 1652474169997,
+      "period": "1652474160000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 374,
+          "count": 5981,
+          "p50": 22,
+          "median": 22,
+          "p75": 58.6,
+          "p90": 111.1,
+          "p95": 194.4,
+          "p99": 278.7,
+          "p999": 308
+        },
+        "vusers.session_length": {
+          "min": 1001.9,
+          "max": 1576.8,
+          "count": 3009,
+          "p50": 1107.9,
+          "median": 1107.9,
+          "p75": 1224.4,
+          "p90": 1300.1,
+          "p95": 1326.4,
+          "p99": 1495.5,
+          "p999": 1556.5
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.codes.200": 5922,
+        "http.responses": 5922,
+        "vusers.failed": 0,
+        "vusers.completed": 2974,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3000,
+        "vusers.created": 3000,
+        "http.requests": 6003
+      },
+      "rates": {
+        "http.request_rate": 600
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474170002,
+      "firstHistogramAt": 1652474170002,
+      "lastCounterAt": 1652474179998,
+      "lastHistogramAt": 1652474179986,
+      "firstMetricAt": 1652474170002,
+      "lastMetricAt": 1652474179998,
+      "period": "1652474170000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 447,
+          "count": 5922,
+          "p50": 36.2,
+          "median": 36.2,
+          "p75": 102.5,
+          "p90": 190.6,
+          "p95": 273.2,
+          "p99": 333.7,
+          "p999": 432.7
+        },
+        "vusers.session_length": {
+          "min": 1002,
+          "max": 1804,
+          "count": 2974,
+          "p50": 1176.4,
+          "median": 1176.4,
+          "p75": 1300.1,
+          "p90": 1380.5,
+          "p95": 1436.8,
+          "p99": 1587.9,
+          "p999": 1790.4
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.codes.200": 6049,
+        "http.responses": 6049,
+        "http.requests": 5990,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 2993,
+        "vusers.created": 2993,
+        "vusers.failed": 0,
+        "vusers.completed": 3018
+      },
+      "rates": {
+        "http.request_rate": 601
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474180000,
+      "firstHistogramAt": 1652474180000,
+      "lastCounterAt": 1652474189978,
+      "lastHistogramAt": 1652474189976,
+      "firstMetricAt": 1652474180000,
+      "lastMetricAt": 1652474189978,
+      "period": "1652474180000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 541,
+          "count": 6049,
+          "p50": 44.3,
+          "median": 44.3,
+          "p75": 117.9,
+          "p90": 202.4,
+          "p95": 247.2,
+          "p99": 368.8,
+          "p999": 518.1
+        },
+        "vusers.session_length": {
+          "min": 1001.7,
+          "max": 1836.6,
+          "count": 3018,
+          "p50": 1200.1,
+          "median": 1200.1,
+          "p75": 1274.3,
+          "p90": 1353.1,
+          "p95": 1465.9,
+          "p99": 1720.2,
+          "p999": 1755
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 5993,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3007,
+        "vusers.created": 3007,
+        "http.codes.200": 6058,
+        "http.responses": 6058,
+        "vusers.failed": 0,
+        "vusers.completed": 3006
+      },
+      "rates": {
+        "http.request_rate": 600
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474190050,
+      "firstHistogramAt": 1652474190083,
+      "lastCounterAt": 1652474199999,
+      "lastHistogramAt": 1652474199999,
+      "firstMetricAt": 1652474190050,
+      "lastMetricAt": 1652474199999,
+      "period": "1652474190000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 285,
+          "count": 6058,
+          "p50": 19.9,
+          "median": 19.9,
+          "p75": 49.9,
+          "p90": 94.6,
+          "p95": 147,
+          "p99": 214.9,
+          "p999": 262.5
+        },
+        "vusers.session_length": {
+          "min": 1002.5,
+          "max": 1574.4,
+          "count": 3006,
+          "p50": 1085.9,
+          "median": 1085.9,
+          "p75": 1200.1,
+          "p90": 1274.3,
+          "p95": 1326.4,
+          "p99": 1465.9,
+          "p999": 1556.5
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3000,
+        "vusers.created": 3000,
+        "http.requests": 5979,
+        "http.codes.200": 5983,
+        "http.responses": 5983,
+        "vusers.failed": 0,
+        "vusers.completed": 2979
+      },
+      "rates": {
+        "http.request_rate": 602
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474200000,
+      "firstHistogramAt": 1652474200000,
+      "lastCounterAt": 1652474209999,
+      "lastHistogramAt": 1652474209999,
+      "firstMetricAt": 1652474200000,
+      "lastMetricAt": 1652474209999,
+      "period": "1652474200000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 310,
+          "count": 5983,
+          "p50": 25.8,
+          "median": 25.8,
+          "p75": 62.2,
+          "p90": 111.1,
+          "p95": 159.2,
+          "p99": 206.5,
+          "p999": 262.5
+        },
+        "vusers.session_length": {
+          "min": 1001.7,
+          "max": 1624.6,
+          "count": 2979,
+          "p50": 1107.9,
+          "median": 1107.9,
+          "p75": 1224.4,
+          "p90": 1274.3,
+          "p95": 1326.4,
+          "p99": 1495.5,
+          "p999": 1556.5
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 2995,
+        "vusers.created": 2995,
+        "http.requests": 5966,
+        "http.codes.200": 5953,
+        "http.responses": 5953,
+        "vusers.failed": 0,
+        "vusers.completed": 2966
+      },
+      "rates": {
+        "http.request_rate": 600
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474210016,
+      "firstHistogramAt": 1652474210022,
+      "lastCounterAt": 1652474219993,
+      "lastHistogramAt": 1652474219971,
+      "firstMetricAt": 1652474210016,
+      "lastMetricAt": 1652474219993,
+      "period": "1652474210000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 444,
+          "count": 5953,
+          "p50": 43.4,
+          "median": 43.4,
+          "p75": 96.6,
+          "p90": 190.6,
+          "p95": 252.2,
+          "p99": 295.9,
+          "p999": 432.7
+        },
+        "vusers.session_length": {
+          "min": 1002.4,
+          "max": 1808.3,
+          "count": 2966,
+          "p50": 1130.2,
+          "median": 1130.2,
+          "p75": 1274.3,
+          "p90": 1353.1,
+          "p95": 1436.8,
+          "p99": 1495.5,
+          "p999": 1755
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 2956,
+        "vusers.created": 2956,
+        "http.requests": 5900,
+        "http.codes.200": 5893,
+        "http.responses": 5893,
+        "vusers.failed": 0,
+        "vusers.completed": 2948
+      },
+      "rates": {
+        "http.request_rate": 606
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474220083,
+      "firstHistogramAt": 1652474220092,
+      "lastCounterAt": 1652474229835,
+      "lastHistogramAt": 1652474229814,
+      "firstMetricAt": 1652474220083,
+      "lastMetricAt": 1652474229835,
+      "period": "1652474220000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 401,
+          "count": 5893,
+          "p50": 34.8,
+          "median": 34.8,
+          "p75": 80.6,
+          "p90": 153,
+          "p95": 228.2,
+          "p99": 327.1,
+          "p999": 391.6
+        },
+        "vusers.session_length": {
+          "min": 1002.5,
+          "max": 1636.4,
+          "count": 2948,
+          "p50": 1153.1,
+          "median": 1153.1,
+          "p75": 1274.3,
+          "p90": 1326.4,
+          "p95": 1353.1,
+          "p99": 1495.5,
+          "p999": 1556.5
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 2978,
+        "vusers.created": 2978,
+        "http.requests": 5987,
+        "http.codes.200": 5964,
+        "http.responses": 5964,
+        "vusers.failed": 0,
+        "vusers.completed": 2979
+      },
+      "rates": {
+        "http.request_rate": 610
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474230070,
+      "firstHistogramAt": 1652474230076,
+      "lastCounterAt": 1652474239999,
+      "lastHistogramAt": 1652474239732,
+      "firstMetricAt": 1652474230070,
+      "lastMetricAt": 1652474239999,
+      "period": "1652474230000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 383,
+          "count": 5964,
+          "p50": 40,
+          "median": 40,
+          "p75": 98.5,
+          "p90": 186.8,
+          "p95": 237.5,
+          "p99": 327.1,
+          "p999": 376.2
+        },
+        "vusers.session_length": {
+          "min": 1001.8,
+          "max": 1684.7,
+          "count": 2979,
+          "p50": 1176.4,
+          "median": 1176.4,
+          "p75": 1274.3,
+          "p90": 1326.4,
+          "p95": 1353.1,
+          "p99": 1525.7,
+          "p999": 1587.9
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.requests": 6189,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3071,
+        "vusers.created": 3071,
+        "http.codes.200": 6056,
+        "http.responses": 6056,
+        "vusers.failed": 0,
+        "vusers.completed": 3098
+      },
+      "rates": {
+        "http.request_rate": 618
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474240000,
+      "firstHistogramAt": 1652474240007,
+      "lastCounterAt": 1652474249999,
+      "lastHistogramAt": 1652474249991,
+      "firstMetricAt": 1652474240000,
+      "lastMetricAt": 1652474249999,
+      "period": "1652474240000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 355,
+          "count": 6056,
+          "p50": 47,
+          "median": 47,
+          "p75": 92.8,
+          "p90": 162.4,
+          "p95": 214.9,
+          "p99": 314.2,
+          "p999": 347.3
+        },
+        "vusers.session_length": {
+          "min": 1004.7,
+          "max": 1611.4,
+          "count": 3098,
+          "p50": 1176.4,
+          "median": 1176.4,
+          "p75": 1249.1,
+          "p90": 1353.1,
+          "p95": 1436.8,
+          "p99": 1495.5,
+          "p999": 1556.5
+        }
+      }
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 3000,
+        "vusers.created": 3000,
+        "http.requests": 5909,
+        "http.codes.200": 6072,
+        "http.responses": 6072,
+        "vusers.failed": 0,
+        "vusers.completed": 2954
+      },
+      "rates": {
+        "http.request_rate": 593
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474250013,
+      "firstHistogramAt": 1652474250013,
+      "lastCounterAt": 1652474259999,
+      "lastHistogramAt": 1652474259999,
+      "firstMetricAt": 1652474250013,
+      "lastMetricAt": 1652474259999,
+      "period": "1652474250000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 496,
+          "count": 6072,
+          "p50": 41.7,
+          "median": 41.7,
+          "p75": 117.9,
+          "p90": 228.2,
+          "p95": 273.2,
+          "p99": 432.7,
+          "p999": 487.9
+        },
+        "vusers.session_length": {
+          "min": 1002.3,
+          "max": 1737.6,
+          "count": 2954,
+          "p50": 1200.1,
+          "median": 1200.1,
+          "p75": 1274.3,
+          "p90": 1353.1,
+          "p95": 1495.5,
+          "p99": 1620,
+          "p999": 1720.2
+        }
+      }
+    },
+    {
+      "counters": {
+        "http.codes.200": 5396,
+        "http.responses": 5396,
+        "vusers.failed": 0,
+        "vusers.completed": 2893,
+        "http.requests": 5383,
+        "vusers.created_by_name.Get instruments, and then get candlesticks based on an instrument isin": 2496,
+        "vusers.created": 2496
+      },
+      "rates": {
+        "http.request_rate": 579
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1652474260000,
+      "firstHistogramAt": 1652474260000,
+      "lastCounterAt": 1652474269724,
+      "lastHistogramAt": 1652474269724,
+      "firstMetricAt": 1652474260000,
+      "lastMetricAt": 1652474269724,
+      "period": "1652474260000",
+      "summaries": {
+        "http.response_time": {
+          "min": 0,
+          "max": 282,
+          "count": 5396,
+          "p50": 16.9,
+          "median": 16.9,
+          "p75": 53,
+          "p90": 96.6,
+          "p95": 153,
+          "p99": 257.3,
+          "p999": 278.7
+        },
+        "vusers.session_length": {
+          "min": 1001.7,
+          "max": 1581.7,
+          "count": 2893,
+          "p50": 1107.9,
+          "median": 1107.9,
+          "p75": 1224.4,
+          "p90": 1274.3,
+          "p95": 1326.4,
+          "p99": 1465.9,
+          "p999": 1556.5
+        }
+      }
+    }
+  ]
+};
+const editor = ace.edit("editor");
+editor.getSession().setMode("ace/mode/javascript");
+editor.setValue(JSON.stringify(Report, null, 2));
+editor.gotoLine(1);
+editor.setHighlightActiveLine(false);
+
+const l = _;
+
+$("#timestamp").html(
+  moment(Report.aggregate.period).format("DD MMM YYYY HH:mm:SS")
+);
+// $('#testDuration').html(Math.floor((l.last(Report.intermediate).lastCounterAt - Report.intermediate[0].firstCounterAt)/1000));
+$("#testDuration").html(l.size(Report.intermediate) * 10);
+$("#vuCompleted").html(Report.aggregate.counters["vusers.completed"]);
+$("#vuCreated").html(Report.aggregate.counters["vusers.created"]);
+
+const chartBgColors = {
+  red: "rgba(255, 99, 132, 0.2)",
+  orange: "rgba(255, 159, 64, 0.2)",
+  yellow: "rgba(255, 205, 86, 0.2)",
+  green: "rgba(75, 192, 192, 0.2)",
+  blue: "rgba(54, 162, 235, 0.2)",
+};
+
+const chartBorderColors = {
+  red: "rgb(255, 99, 132)",
+  orange: "rgb(255, 159, 64)",
+  yellow: "rgb(255, 205, 86)",
+  green: "rgb(75, 192, 192)",
+  blue: "rgb(54, 162, 235)",
+};
+
+const getHttpColor = (httpCode) => {
+  const code = parseInt(httpCode, 10);
+
+  if (code >= 100 && code < 200) {
+    return chartBorderColors.blue;
+  } else if (code >= 200 && code < 300) {
+    return chartBorderColors.green;
+  } else if (code >= 300 && code < 400) {
+    return chartBorderColors.red;
+  } else if (code >= 400 && code < 500) {
+    return chartBorderColors.yellow;
+  }
+
+  return chartBorderColors.orange;
+}
+
+const getLatencyColor = (latency) => {
+  switch(latency) {
+    case "min":
+      return chartBorderColors.red;
+    case "max":
+      return chartBorderColors.orange;
+    case "median":
+      return chartBorderColors.yellow;
+    case "p95":
+      return chartBorderColors.green;
+    case "p99":
+      return chartBorderColors.green;
+    default:
+      return '';
+  }
+};
+
+const getCustomStats = (stats) =>
+  l.omitBy(
+    stats,
+    (_, key) =>
+      key.startsWith("errors.") ||
+      key.startsWith("core.") ||
+      key.startsWith("engine.")
+  );
+
+const scenarioCounts = l.pickBy(Report.aggregate.counters, (_, key) =>
+  key.startsWith("vusers.created_by_name")
+);
+
+if (l.size(scenarioCounts) > 0) {
+  l.each(scenarioCounts, function (count, key) {
+    const [, , name] = key.split(".");
+
+    const $tdName = $("<td>" + name + "</td>");
+    const percentage =
+      Math.round(
+        (count / Report.aggregate.counters["vusers.created"]) *
+          100 *
+          1000
+      ) / 1000;
+    const $tdCount = $("<td>" + count + " (" + percentage + "%)" + "</td>");
+    $("<tr></tr>")
+      .append($tdName)
+      .append($tdCount)
+      .appendTo($("#scenarioCounts"));
+  });
+} else {
+  $("#scenarioCountsContainer").hide();
+}
+
+const httpCodes = l.pickBy(Report.aggregate.counters, (_, key) =>
+  key.startsWith("http.codes")
+);
+
+const errors = l.pickBy(Report.aggregate.counters, (_, key) =>
+  key.startsWith("errors.")
+);
+if (l.size(errors) > 0) {
+  l.each(errors, function (count, error) {
+    const [, errorDetail] = error.split("errors.");
+
+    $("<tr></tr>")
+      .append($("<td>" + errorDetail + "</td>"))
+      .append($("<td>" + count + "</td>"))
+      .appendTo($("#errors"));
+  });
+} else {
+  $("#errorsContainer > p").html(
+    "&#10004; Test completed without network or OS errors."
+  );
+}
+
+const getTimePeriodAggregates = (summaries) => {
+  const summary =
+    summaries["socketio.response_time"] ||
+    summaries["http.response_time"];
+  const metrics = ["min", "max", "median", "p95", "p99"];
+
+  return l.pickBy(summary, (_, key) => metrics.includes(key));
+};
+
+const getLatencyDistribution = (data) => {
+  return l.reduce(
+    data,
+    (acc, value, key) => {
+      acc.labels.push(key);
+      acc.values.push(value);
+
+      return acc;
+    },
+    { labels: [], values: [] }
+  );
+};
+
+const randomRgbColor = () => {
+  const r = Math.floor(Math.random() * 256);
+  const g = Math.floor(Math.random() * 256);
+  const b = Math.floor(Math.random() * 256);
+
+  return "rgb(" + r + ", " + g + ", " + b + ")";
+};
+
+const latencyDistributionData = getLatencyDistribution(
+  getTimePeriodAggregates(Report.aggregate.summaries)
+);
+
+const latencyAtIntervalsData = (intermediates = []) => {
+  const data = intermediates.reduce(
+    (acc, entry, idx) => {
+      const latencies = getTimePeriodAggregates(entry.summaries);
+
+      l.each(latencies, (latency, key) => {
+        acc.values[key] = acc.values[key] || [];
+
+        acc.values[key].push(latency);
+      });
+
+      acc.labels.push((idx + 1) * 10);
+
+      return acc;
+    },
+    { labels: [], values: {} }
+  );
+
+  return {
+    labels: data.labels,
+    datasets: l.map(data.values, (entry, key) => {
+      const color = getLatencyColor(key);
+
+      return {
+        label: key,
+        data: entry,
+        fill: false,
+        backgroundColor: color,
+        borderColor: color,
+        tension: 0.5,
+      };
+    })
+  };
+};
+
+const getCounterDataset = (intermediates = [], counterKeys) => {
+  let counterKey = "";
+
+  if (intermediates[0]) {
+    for (const key of counterKeys) {
+      if (key in intermediates[0].counters) {
+        counterKey = key;
+        break;
+      }
+    }
+  }
+
+  const data = intermediates.reduce(
+    (acc, entry, idx) => {
+      const count = entry.counters[counterKey] || 0;
+
+      acc.labels.push((idx + 1) * 10);
+      acc.values.push(count);
+
+      return acc;
+    },
+    { labels: [], values: [] }
+  );
+
+  return {
+    labels: data.labels,
+    datasets: [
+      {
+        data: data.values,
+        fill: false,
+        borderColor: randomRgbColor(),
+        tension: 0.5,
+      },
+    ],
+  };
+};
+
+const getMeanRpsData = (intermediates = []) => {
+  const data = intermediates.reduce(
+    (acc, entry, idx) => {
+      const count =
+        entry.rates["http.request_rate"] ||
+        entry.rates["socketio.emit_rate"] ||
+        entry.rates["websocket.send_rate"] ||
+        0;
+
+      acc.labels.push((idx + 1) * 10);
+      acc.values.push(count);
+
+      return acc;
+    },
+    { labels: [], values: [] }
+  );
+
+  return {
+    labels: data.labels,
+    datasets: [
+      {
+        data: data.values,
+        fill: false,
+        borderColor: randomRgbColor(),
+        tension: 0.5,
+      },
+    ],
+  };
+};
+
+const getHttpCodesAtIntervalsData = (intermediates = []) => {
+  const data = intermediates.reduce(
+    (acc, entry, idx) => {
+      const httpCodes = l.pickBy(entry.counters, (_, key) =>
+        key.startsWith("http.codes")
+      );
+
+      if (l.size(httpCodes) > 0) {
+        l.each(httpCodes, (count, key) => {
+          let [, , , code] = key.split(".");
+          code = parseInt(code, 10);
+
+          acc.values[code] = acc.values[code] || [];
+
+          acc.values[code].push(count);
+        });
+      }
+
+      acc.labels.push((idx + 1) * 10);
+
+      return acc;
+    },
+    { labels: [], values: {} }
+  );
+
+  return {
+    labels: data.labels,
+    datasets: l.map(data.values, (entry, key) => {
+      const color = getHttpColor(key);
+
+      return {
+        label: key,
+        data: entry,
+        fill: false,
+        backgroundColor: color,
+        borderColor: color,
+        tension: 0.5,
+      };
+    }),
+  };
+};
+
+const getHttpCodesData = (counters) => {
+  const httpCodes = l.pickBy(counters, (_, key) =>
+    key.startsWith("http.codes")
+  );
+  const labels = [];
+  const data = [];
+  const bgColors = [
+    "rgba(54, 232, 235, 0.5)",
+    "rgba(54, 235, 93, 0.5)",
+    "rgba(229, 235, 54, 0.5)",
+    "rgba(166, 54, 235, 0.5)",
+    "rgba(235, 54, 69, 0.5)",
+  ];
+
+  if (l.size(httpCodes) > 0) {
+    l.each(httpCodes, function (count, key) {
+      let [, , , code] = key.split(".");
+      code = parseInt(code, 10);
+
+      labels.push(code);
+      data.push(count);
+    });
+  }
+
+  return {
+    labels,
+    datasets: [
+      {
+        backgroundColor: labels.map(getHttpColor),
+        hoverOffset: 4,
+        data,
+      },
+    ],
+  };
+};
+
+if (l.size(errors) > 0) {
+  const getErrorsAtIntervalsData = (intermediates = []) => {
+    const data = intermediates.reduce(
+      (acc, entry, idx) => {
+        const errorsCounters = l.pickBy(entry.counters, (_, key) =>
+          key.startsWith("errors.")
+        );
+
+        l.each(errorsCounters, (count, key) => {
+          const [, errorDetail] = key.split("errors.");
+
+          acc.values[errorDetail] = acc.values[errorDetail] || [];
+
+          acc.values[errorDetail].push(count);
+        });
+
+        acc.labels.push((idx + 1) * 10);
+
+        return acc;
+      },
+      { labels: [], values: {} }
+    );
+
+    return {
+      labels: data.labels,
+      datasets: l.map(data.values, (entry, key) => {
+        return {
+          label: key,
+          data: entry,
+          fill: false,
+          backgroundColor: Object.values(chartBgColors),
+          borderColor: Object.values(chartBorderColors),
+          tension: 0.5,
+        };
+      })
+    };
+  };
+
+  new Chart(document.getElementById("errorsAtIntervalsChart"), {
+    type: "line",
+    data: getErrorsAtIntervalsData(Report.intermediate),
+    options: {
+      plugins: { legend: { position: "bottom" } },
+      aspectRatio: 3.5,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: "ms",
+          },
+        },
+      },
+    },
+  });
+} else {
+  $("#errorsChartsRow").hide();
+}
+
+const customCounters = getCustomStats(Report.aggregate.counters);
+if (l.size(customCounters) > 0) {
+  let rows = [];
+
+  l.each(customCounters, function (count, key) {
+    const row = $("<tr></tr>")
+      .append($("<td>" + key + "</td>"))
+      .append($("<td>" + count + "</td>"));
+
+    rows.push(row);
+  });
+
+  if (rows.length > 5) {
+    const visibleRows = rows.slice(0, 5);
+    const hiddenRows = rows.slice(5).map((row) => row.addClass("hidden"));
+
+    rows = [
+      ...visibleRows,
+      $(
+        '<tr id="expandCustomCountersRow"><td class="text-center" colspan="2"><a href="" id="expandCustomCounters">Expand</a></td></tr>'
+      ),
+      ...hiddenRows,
+    ];
+  }
+
+  rows.forEach((row) => row.appendTo($("#customCountersTable")));
+
+  if (rows.length > 5) {
+    $("#expandCustomCounters").on("click", (e) => {
+      e.preventDefault();
+
+      $("#customCountersTable tr").removeClass("hidden");
+      $("#expandCustomCountersRow").addClass("hidden");
+    });
+  }
+
+  const getCustomStatsAtIntervalsData = (intermediates = []) => {
+    const data = intermediates.reduce(
+      (acc, entry, idx) => {
+        const customCounters = getCustomStats(entry.counters);
+
+        l.each(customCounters, (count, key) => {
+          acc.values[key] = acc.values[key] || [];
+
+          acc.values[key].push(count);
+        });
+
+        acc.labels.push((idx + 1) * 10);
+
+        return acc;
+      },
+      { labels: [], values: {} }
+    );
+
+    return {
+      labels: data.labels,
+      datasets: l.map(data.values, (entry, key) => {
+        color = randomRgbColor();
+
+        return {
+          label: key,
+          data: entry,
+          fill: false,
+          backgroundColor: color,
+          borderColor: color,
+          tension: 0.5,
+        };
+      }),
+    };
+  };
+
+  new Chart(document.getElementById("customCountersAtIntervalsChart"), {
+    type: "line",
+    data: getCustomStatsAtIntervalsData(Report.intermediate),
+    options: {
+      plugins: { legend: { position: "bottom" } },
+      aspectRatio: 2.5,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: "ms",
+          },
+        },
+      },
+    },
+  });
+} else {
+  $("#customCountersChartsRow").hide();
+  $("#customCountersContainer").hide();
+}
+
+const customStats = getCustomStats(Report.aggregate.summaries);
+const customStatsContainer = $("#customStats");
+if (l.size(customStats) > 0) {
+  let $row;
+
+  Object.entries(customStats).forEach((stats, idx) => {
+    const [statsName, statsData] = stats;
+    const canvasId = "customMetric_" + idx;
+
+    if (idx === 0 || idx % 0 === 0) {
+      $row = $('<div class="row"></div>');
+    }
+
+    $row.append(
+      [
+        '<div class="chart-container text-center col-lg-6"><h4><i class="fas fa-chart-bar"></i> ',
+        statsName,
+        '</h4><canvas id="',
+        canvasId,
+        '"></canvas></div>',
+      ].join("")
+    );
+
+    $row.appendTo(customStatsContainer);
+
+    const { labels, values } = getLatencyDistribution(
+      l.pickBy(statsData, (_, key) =>
+        ["min", "max", "median", "p95", "p99"].includes(key)
+      )
+    );
+
+    setTimeout(function () {
+      new Chart(document.getElementById(canvasId), {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              data: values,
+              backgroundColor: Object.values(chartBgColors),
+              borderColor: Object.values(chartBorderColors),
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "ms",
+              },
+            },
+          },
+        },
+      });
+    });
+  });
+} else {
+  customStatsContainer.hide();
+}
+</script>
+<div id="footer">
+  <footer>This report was created with <a href="https://artillery.io">Artillery</a> - free open-source load-testing for HTTP and WebSockets</footer>
+</div>
+
+</body>
+</html>
