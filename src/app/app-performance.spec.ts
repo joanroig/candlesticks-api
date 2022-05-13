@@ -5,8 +5,8 @@ import Container from "typedi";
 import { parse } from "url";
 import waitForExpect from "wait-for-expect";
 import { Server, WebSocket, WebSocketServer } from "ws";
-import App from "../app/app";
-import TestUtils from "./test-utils";
+import App from "./app";
+import TestUtils from "../test/test-utils";
 
 let appServer: AppServer;
 

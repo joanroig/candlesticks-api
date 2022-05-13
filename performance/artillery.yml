@@ -1,0 +1,28 @@
+config:
+  target: "http://localhost:9000"
+  phases:
+    - duration: 20
+      arrivalRate: 20
+      name: "Warming up"
+    - duration: 60
+      arrivalRate: 20
+      rampTo: 300
+      name: "Ramping up"
+    - duration: 240
+      arrivalRate: 300
+      name: "Sustained load"
+  ensure:
+    p99: 150
+    maxErrorRate: 1
+
+scenarios:
+  - name: "Get instruments, and then get candlesticks based on an instrument isin"
+    flow:
+      - get:
+          url: "/instruments?isinonly=true"
+          capture:
+            - json: "$[1]"
+              as: "isin"
+      - think: 1
+      - get:
+          url: "/candlesticks?isin={{ isin }}"
