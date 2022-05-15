@@ -1,7 +1,8 @@
 # Candlesticks API
 
-System that enables users to view price histories.
-It will receive updates from a partner service, transform these updates and provide the aggregated data through an endpoint.
+Example system that enables users to view price histories.
+It receives updates from a partner service, transform these updates and provide the aggregated data through REST endpoints.
+Performance tests and configurations for JMeter and Artillery are provided.
 
 > The implementation is based on [assumptions](ASSUMPTIONS.md) to develop an MVP within 5 days.
 
