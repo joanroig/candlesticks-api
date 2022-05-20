@@ -67,7 +67,7 @@
     "@typescript-eslint/eslint-plugin": "5.23.0",
     "@typescript-eslint/parser": "5.23.0",
     "artillery": "^2.0.0-16",
-    "eslint": "8.15.0",
+    "eslint": "8.16.0",
     "husky": "8.0.1",
     "istanbul-badges-readme": "^1.8.1",
     "jest-extended": "2.0.0",
