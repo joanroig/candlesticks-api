@@ -2023,7 +2023,7 @@ artillery-plugin-publish-metrics@^2.0.0:
     semver "^7.3.5"
     uuid "^8.3.2"
 
-artillery@^2.0.0-16:
+artillery@2.0.0-16:
   version "2.0.0-16"
   resolved "https://registry.yarnpkg.com/artillery/-/artillery-2.0.0-16.tgz#f7bc88cefd1fa22e89a357e67d970dd6d85511a9"
   integrity sha512-8Fu03CRdst8Ev5KwauYFQz3VG2hLXnCfMiNhUBdPddnrWg0ZQHr5ii5dnPPH1wfHX558avhatW6uijGT29rAkQ==
@@ -5141,7 +5141,7 @@ isomorphic-ws@^4.0.1:
   resolved "https://registry.yarnpkg.com/isomorphic-ws/-/isomorphic-ws-4.0.1.tgz#55fd4cd6c5e6491e76dc125938dd863f5cd4f2dc"
   integrity sha512-BhBvN2MBpWTaSHdWRb/bwdZJ1WaehQ2L1KngkCkfLUGF0mAWAT1sQUQacEmQ0jXkFw/czDXPNQSL5u2/Krsz1w==
 
-istanbul-badges-readme@^1.8.1:
+istanbul-badges-readme@1.8.1:
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/istanbul-badges-readme/-/istanbul-badges-readme-1.8.1.tgz#9095e4f651d479cf2d081ee81a53ad7bb06c29de"
   integrity sha512-I7cEFAFlWc5VB17a71U0TgQbez5+U78F0f4kky1w33L4t3BC4/8gbN1tbmX4LVaki52Op4LrkttpvcdZ6kd/jg==
@@ -5455,7 +5455,7 @@ jest-resolve@^28.1.0:
     resolve.exports "^1.1.0"
     slash "^3.0.0"
 
-jest-runner-groups@^2.2.0:
+jest-runner-groups@2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/jest-runner-groups/-/jest-runner-groups-2.2.0.tgz#e8ac453322c1f001086f4ea0299b8c4c5bd89166"
   integrity sha512-Sp/B9ZX0CDAKa9dIkgH0sGyl2eDuScV4SVvOxqhBMxqWpsNAkmol/C58aTFmPWZj+C0ZTW1r1BSu66MTCN+voA==
